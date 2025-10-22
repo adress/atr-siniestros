@@ -1,0 +1,94 @@
+<ns2:MT_SiniestrosCxPReq xmlns:ns2='http://suramericana.servicioscompartidos.contabilidad.cxp' xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
+	<cabecera>
+		<datosConversionOrigen>
+			<cdFuente>SIN</cdFuente>								cdFuente				--- SIN
+			<nmAplicacion>79</nmAplicacion>							nmAplicacion			--- 79
+			<cdCanal>SEG</cdCanal>									cdCanal					--- SEG
+			CXP 													cdTipoOperacion			---	CXP
+		</datosConversionOrigen>
+		<feFactura>2024-12-10</feFactura>							feDocumento				--- fechaDocumento
+		<cdCompania>02</cdCompania>									cdCompania				--- sociedad. 02:2000
+		<feRegistroSap>2024-12-10</feRegistroSap>					feContabilizacion
+		<nmPeriodo>12</nmPeriodo>									nmPeriodo
+		<cdMoneda>0</cdMoneda>										cdMoneda 				---	0 COP, 1 USD, 8 GBP, 9 EUR, 99 AUD, COP COP. MXN MXN
+		<nmOrdenPago>1007381</nmOrdenPago>							dsReferencia
+		<nmFactura/>												dsTextoCabecera
+		ptTasaCambio												ptTipoCambio
+		feTasaCambio												feConversion
+	</cabecera>
+	<documentosCXP>
+		<nmBeneficiarioPago>1152184318</nmBeneficiarioPago>			nmCuentaContable
+		<cdTipoIdentificacion>C</cdTipoIdentificacion>				cdTipoIdentificacion
+		<cdOficinaRegistro>4030</cdOficinaRegistro>					NO SE USA					
+		<ptImporte>206000000</ptImporte>							ptImporte
+		<snCalcularImpuestos>S</snCalcularImpuestos>				snCalcularImpuestos
+		<cdIva/>													cdIndicadorIva
+		<fePosiblePago>2024-12-10</fePosiblePago>					feBaseDocumento
+		<condicionPago>
+			<cdCondicionPago>0001</cdCondicionPago>					cdCondicionPago
+		</condicionPago>
+		<cdViaPago>CA</cdViaPago>									cdViaPago
+		<cuentaBancaria>
+			<cdPaisBanco>57</cdPaisBanco>							cdPaisBanco
+			<cdBanco/>												cdBanco
+			<nmCuenta/>												nmCuenta
+			<cdTipoCuenta/>											cdTipoCuenta
+			<dsTitular/>											dsTitular
+		</cuentaBancaria>
+		<cdBloqueoPago>A</cdBloqueoPago>							cdBloqueoPago
+		<dsTextoPosicion>AUTORIZACIONES SINIESTROS</dsTextoPosicion>dsTexto
+		<nmPoliza>081003527765</nmPoliza>							dsReferencia1
+		<cdRamo>081</cdRamo>										dsReferencia2
+		<cdOperacion>907</cdOperacion>								Se usa en los parametros contables
+		<cdConcepto>1</cdConcepto>									Se usa en los parametros contables
+		<cdTipoReserva>T</cdTipoReserva>							Se usa en los parametros contables y referencia
+		<retenciones>
+			<cdTipoRetencion/>										cdTipoRetencion
+			<cdIndicadorRetencion/>									cdIndicadorRetencion
+		</retenciones>
+		<detalleSiniestros>
+			<cdRamo>AAV</cdRamo>									claveReferencia2
+			<nmPoliza>081003527765</nmPoliza>						claveReferencia1
+			<cdIntermediario>6886</cdIntermediario>					dsReferencia3
+			<nmExpediente>0810099700755</nmExpediente>				dsTexto
+			<nmAsegurado>1152184318</nmAsegurado>					Se usa en cdAsignacion
+			<ptImporte>206000000</ptImporte>						ptImporte
+			<cdCentroCostos>4030</cdCentroCostos>					cdCentroCostos
+			<feAviso>2024-12-10</feAviso>							feValor
+			<feOcurrencia>2024-12-10</feOcurrencia>					feFinVigencia
+			<cdIndicadorImpuesto>0000</cdIndicadorImpuesto>			cdIndicadorImpuestos
+			<cdOficinaRadicacion>4030</cdOficinaRadicacion>			cdDivision
+			<cdCompaniaParametro>02</cdCompaniaParametro>			parametro01
+			<cdRamoParametro>N</cdRamoParametro>					Se usa en parametro02
+			<cdTipoReserva>T</cdTipoReserva>						Se usa en los paramettos contables y referencia2
+			<cdOperacion>907</cdOperacion>							Se usa en los parametros contables
+			<cdConcepto>1</cdConcepto>								Se usa en los parametros contables
+			<cdConceptoAdicional/>									Se usa en la asignacion
+			<dsTextoPosicion>0810099700755-LINAJATE</dsTextoPosicion>dsTexto
+		</detalleSiniestros>
+	</documentosCXP>
+	<tercero>
+		<dsTratamiento/>
+		<dsNombre>Gustavo Alberto Loaiza Estrada</dsNombre>			NO SE USA		
+		<dsApellidos>Loaiza Estrada</dsApellidos>					dsApellidos					
+		<dsNombres>Gustavo Alberto</dsNombres>						dsNombres
+		<dsDireccion/>												dsDireccion
+		<informacionFiscal>
+			<nmIdentificacion>1152184318</nmIdentificacion>			nmIdentificacion
+			<cdTipoIdentificacion>C</cdTipoIdentificacion>			cdTipoIdentificacion
+		</informacionFiscal>
+		<dsApartadoAereo/>
+		<cdPais>57</cdPais>											cdPais
+		<cdRegion>05</cdRegion>										cdRegion
+		<cdPoblacion>05001</cdPoblacion>							cdPoblacion
+		<cdIdioma/>													NO SE USA
+		<cuentaBancaria>
+			<cdPaisBanco>57</cdPaisBanco>							cdPaisBanco
+			<cdBanco/>												cdBanco
+			<nmCuenta/>												nmCuenta
+			<cdTipoCuenta/>											cdTipoCuenta
+			<dsTitular/>											dsTitular
+		</cuentaBancaria>
+	</tercero>
+	<parametrosAdicionales/>
+</ns2:MT_SiniestrosCxPReq>

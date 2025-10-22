@@ -1,0 +1,213 @@
+{
+	*control*
+   "control":{ *Llave de comunicación entre SAP y el aplicativo de negocio*
+      "sistemaOrigen":"CORETECH", *Identificador del aplicativo fuente (convención acordada por las partes)*
+      "identificador":"123678"  *Número unico de cada mensaje para la comunicación enviado por la fuente*
+   },
+   "cabecera":{ *Datos de cabecera del documento contable SAP*
+	  *cabecera.determinacionContable*
+      "determinacionContable":{ *Determinacion de la clase de documento en SAP*
+         "canal":"RES", *Constante (convención acordada por las partes)*
+         "fuente":"REA", *Constante (convención acordada por las partes)*
+         "operacion":"GL", *Constante (convención acordada por las partes)*
+         "aplicacion":"8777" *Constante (convención acordada por las partes), recomendación usar el ID de APM del aplicativo de negocio*
+      },
+	  *cabecera.datosGenerales*	
+      "datosGenerales":{ *Otros datos cabecera del documento SAP*
+         "sociedad":"1000", *Código de la compañía, recomendación usar el código SAP, como opción es posible usar el código del core y realizar homologación*
+         "fechaDocumento":"2025-01-13", *Fecha expedicion para seguros/Fecha según definición y necesidades contables; ejemplo la fecha de la factura*
+         "fechaContable":"2025-01-13", *Fecha en la cual debe quedar contabilizada la información.*
+         "moneda":"COP", *Código de la moneda en la cual se envia la información, recomendación usar el código SAP, como opción es posible usar el código del core y realizar homologación*
+         "referencia":"78655P", *Según definición y necesidades contables y de información de la compañía (identificador de la informacion enviada) puede ser alfa-numerica*
+         "claveReferencia1":"", *Para seguros, número de la poliza*
+         "claveReferencia2":"", *Para seguros, ramo principal*
+         "texto":"", *Un texto que informe de manera general y resumida lo enviado, según definición y necesidades contables y de información de la compañía*
+         "tipoCambio":"", *Valor de la moneda, se envia información si tag "moneda" es distinta al peso Colombiano (COP)*
+         "fechaTipoCambio":"" *Fecha para que SAP determine el valor de la moneda, se envia información si tag "moneda" es distinta al peso Colombiano (COP)*
+      },
+	  *cabecera.parametrosAdicionales[i]*
+      "parametrosAdicionales":[
+         {
+            "clave":"",
+            "valor":""
+         }
+      ]
+   },
+   "posiciones":[ *Detalle del documento contable SAP*
+      {
+         "resumen":{ *Es donde llega la informacion de la CXP, CXC (Cuentas asociadas o de gestión de dinero), o la partida en un documento GL*
+			*posiciones[i].resumen.parametrosContables*
+            "parametrosContables":{ *Son 10 campos con los cuales contabilidad determina la cuenta contable y la naturaleza (+/ -), caracteristicas del movimiento enviado*
+               "parametro01":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro02":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro03":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro04":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro05":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro06":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro07":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro08":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro09":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro10":"" *Según definición y necesidades contables y de información de la compañía*
+            },
+			*posiciones[i].resumen.datosGenerales*
+            "datosGenerales":{
+               "claseCuenta":"", *tipo de cuenta (K, D, S)*
+               "sociedad":"", *Código de la compañía, recomendación usar el código SAP, como opción es posible usar el código del core y realizar homologación*
+               "valor":"", * Valor neto del movimiento ( valor + iva)*
+               "indicadorImpuestos":"", 
+               "oficina":"", *Codigo de la oficina (recomendación usar el codigo SAP, como opción es posible usar el codigo del core y realizar homologación, para este caso enviar concatenado codigo sociedad + codigo core)*
+               "centroCostos":"", *Codigo del ceco / oficina (recomendación usar el codigo SAP, como opción es posible usar el codigo del core y realizar homologación, para este caso enviar concatenado codigo sociedad + codigo core)*
+               "centroBeneficios":"", *Aplica S4/hana Codigo del cebe / oficina (recomendación usar el codigo SAP, como opción es posible usar el codigo del core y realizar homologación, para este caso enviar concatenado codigo sociedad + codigo core)*
+               "indicadorBloqueo":"", *Código según definición y necesidades de tesoreria y negocio*
+               "viaPago":"", *Código según definición y necesidades de tesoreria y negocio*
+               "fechaInicio":"", *Fecha según definición y necesidades de tesoreria y negocio*
+               "claveReferencia1":"", *Enviar el número de identificación fiscal del tercero*
+	           "claveReferencia2":"", *Para Seguros, es el código del ramo*
+               "claveReferencia3":"", 
+               "asignacion":"", *Según definición y necesidades contables y de información de la compañía, para la mayoria de interfaces se tiene el ID de P8*
+               "texto":"", *Un texto que informe sobre el movimiento enviado, según definición y necesidades contables y de información de la compañía*
+
+               "contrato":"", *Número de contrato de Ariba*
+               "lineaDeNegocio":"",  *Para Seguros, es el código del ramo,  UEN en ARL*
+               "asesor":"",  *Código del asesor*
+               "zReferencia01":"", *Poliza (En SAP mapear al campo XREF1)* 
+               "zReferencia02":"", *Tipo de operacion*
+               "zReferencia03":"", *Nombre (En SAP mapear al campo ZZNOMBRE)*
+               "zReferencia04":"", *NIT (En SAP mapear al campo ZZNIT)*
+               "zReferencia05":"", *Municipio*
+               "zReferencia06":"", *Expediente*
+               "zReferencia07":"", *Poliza lider (En SAP mapear al campo ZZPOLLID)*
+               "zReferencia08":"", *Certificado lider (En SAP mapear al campo ZZCERLID)*
+               "zReferencia09":"", *Valores totales de factura*
+               "zReferencia10":""
+			   "zFecha01":"YYYY-MM-DD" *Fecha fin vigencia ZZFECVEN*
+            },
+			*posiciones[i].resumen.descuento*
+            "descuento":{   *se envia en caso de tener descuentos por pronto pago*
+               "condicionPago":"", *Código según definición y necesidades de tesoreria y negocio*
+               "base":"", *Valor base para el calculo del descuento*
+               "valor":"",
+               "dias01":"",
+               "dias02":"",
+               "dias03":"",
+               "porcentaje01":"1",
+               "porcentaje02":""
+            },
+			*posiciones[i].resumen.retenciones[j]*
+            "retenciones":[ *Codigos de retenciones / aplica para CXP*
+               {
+                  "tipoRetencion":"TTTIII_RF", *XYYY Conca -> codigo a convenir RF indica concepto de compra*  
+                  "indicadorRetencion":"TTTIII_RF" *Código interno honorario "001", servicio "002"*
+                  "valorBaseRetencion":"",   *Enviar la base de retencion valor bruto*          
+                  "valorRetencion":"",    
+               }
+			   {
+                  "tipoRetencion":"TTTIII_RI", *Reteiva*
+                  "indicadorRetencion":"TTTIII_RI" *Código interno honorario, servicio*
+                  "valorBaseRetencion":"",   *Enviar el valor del IVA*                    
+                  "valorRetencion":"",                
+               },
+			   {
+                  "tipoRetencion":"05001III_RC", *RC + codigo del municipio -- Reteica*
+                  "indicadorRetencion":"05001III_RC" *concatener municipo con Código interno honorario, servicio, etc
+                  "valorBaseRetencion":"",   *enviar la base de retencion valor bruto*              
+                  "valorRetencion":"",                
+               }
+            ],  
+ 			*posiciones[i].resumen.tercero*
+            "tercero":{  *Datos de terceros, en caso de que en SAP no exista, es la data con la cual se crea el tercero en SAP*
+			   *posiciones[i].resumen.general*
+               "general":{
+                  "codigoTercero":"",*enviar el bp en caso de que se tenga*
+                  "tipoIdentificacion":"",
+                  "identificacion":""              
+               },               
+			   *posiciones[i].resumen.pagadorAlternativo*
+               "pagadorAlternativo":{
+                  "tipoIdentificacion":"",
+                  "identificacion":""
+               },
+			   *posiciones[i].resumen.datosBancarios*
+               "datosBancarios":{
+                  "paisBanco":"",
+                  "banco":"",
+                  "cuenta":"",
+                  "tipoCuenta":"",
+                  "tipoIdentificacion":"",
+                  "identificacion":"",
+                  "nombreTitular":"",
+                  "apuntadorCuenta":""
+               },
+			   *posiciones[i].resumen.determinacionBancaria*
+               "determinacionBancaria":{
+                  "tipoIdentificacion":"",
+                  "identificacion":"",
+                  "claveReferencia1":"",
+                  "claveReferencia2":""
+               }
+            },
+			*posiciones[i].resumen.parametrosAdicionales[k]*
+            "parametrosAdicionales":[ *Valores adicionlaes que requiera enviar la fuente*
+               {
+                  "clave":"",
+                  "valor":""
+               }
+            ]
+         },
+         "detalle":{  *Es donde llega la informacion de la contra partida en un documento GL, este bloque se puede repetir n veces (899 veces)*
+			*posiciones[i].detalle[m].parametrosContables*
+            "parametrosContables":{ *Son 10 campos con los cuales contabilidad determina la cuenta contable y la naturaleza (+/ -), caracteristicas del movimiento enviado*
+               "parametro01":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro02":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro03":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro04":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro05":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro06":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro07":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro08":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro09":"", *Según definición y necesidades contables y de información de la compañía*
+               "parametro10":"" *Según definición y necesidades contables y de información de la compañía*
+            },
+			*posiciones[i].detalle[m].datosGenerales*
+            "datosGenerales":{
+               "claseCuenta":"", *tipo de cuenta (K, D, S)*
+               "sociedad":"", *Código de la compañía, recomendación usar el código SAP, como opción es posible usar el código del core y realizar homologación*
+               "valor":"", * Valor neto del movimiento ( valor + iva)*
+               "indicadorImpuestos":"" *Código según definición y necesidades de impuestos* 
+               "oficina":"", *Codigo de la oficina (recomendación usar el codigo SAP, como opción es posible usar el codigo del core y realizar homologación, para este caso enviar concatenado codigo sociedad + codigo core)*
+               "centroCostos":"", *Codigo del ceco / oficina (recomendación usar el codigo SAP, como opción es posible usar el codigo del core y realizar homologación, para este caso enviar concatenado codigo sociedad + codigo core)*
+               "centroBeneficios":"", *Aplica S4/hana Codigo del cebe / oficina (recomendación usar el codigo SAP, como opción es posible usar el codigo del core y realizar homologación, para este caso enviar concatenado codigo sociedad + codigo core)*              
+			   "fechaInicio":"",  *Fecha según definición y necesidades de tesoreria y negocio*
+               "claveReferencia1":"", *Enviar el número de identificación fiscal del tercero*
+	           "claveReferencia2":"", *Para Seguros, es el código del ramo*
+               "claveReferencia3":"", 
+               "asignacion":"", *Según definición y necesidades contables y de información de la compañía, para la mayoria de interfaces se tiene el ID de P8*
+               "texto":"", *Un texto que informe sobre el movimiento enviado, según definición y necesidades contables y de información de la compañía*
+
+
+               "contrato":"", *Número de contrato de Ariba*
+               "lineaDeNegocio":"",  *Para Seguros, es el código del ramo,  UEN en ARL*
+               "asesor":"",  *Código del asesor*
+               "zReferencia01":"", *Poliza (En SAP mapear al campo XREF1)* 
+               "zReferencia02":"", *Tipo de operacion*
+               "zReferencia03":"", *Nombre (En SAP mapear al campo ZZNOMBRE)*
+               "zReferencia04":"", *NIT (En SAP mapear al campo ZZNIT)*
+               "zReferencia05":"", *Municipio*
+               "zReferencia06":"", *Expediente*
+               "zReferencia07":"", *Poliza lider (En SAP mapear al campo ZZPOLLID)*
+               "zReferencia08":"", *Certificado lider (En SAP mapear al campo ZZCERLID)*
+               "zReferencia09":"", *Valores totales de factura*
+               "zReferencia10":""
+			   "zFecha01":"YYYY-MM-DD" *Fecha fin vigencia ZZFECVEN*
+            },
+			*posiciones[i].detalle[m].parametrosAdicionales[n]*
+            "parametrosAdicionales":[ *Valores adicionlaes que requiera enviar la fuente*
+               {
+                  "clave":"",
+                  "valor":""
+               }
+            ]
+         }
+      }
+   ]
+}

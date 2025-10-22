@@ -1,0 +1,164 @@
+<broker-message>
+	<entorno-result>WLS</entorno-result>
+	<id-transaccion>6575268</id-transaccion>
+	<params-entrada-serial>
+		<?xml version="1.0" encoding="iso-8859-1"?>
+		<array-list collecion="true" class="java.util.ArrayList">
+			<parametro-broker class="co.com.suramericana.framework.broker.commons.message.ParametroBroker">
+				<valor class="cxp.contabilidad.servicioscompartidos.suramericana.DTSiniestrosCxP">
+					<CABECERA class="cxp.contabilidad.servicioscompartidos.suramericana.DTSiniestrosCxPCabecera">
+						<DATOSCONVERSIONORIGEN class="sap.servicioscompartidos.suramericana.DTDatosConversionOrigen">
+							<CDFUENTE >SIN</CDFUENTE>
+							<NMAPLICACION >79</NMAPLICACION>
+							<CDCANAL >BAN</CDCANAL>
+						</DATOSCONVERSIONORIGEN>
+						<FEFACTURA >03/03/2025 14:45:44</FEFACTURA>
+						<CDCOMPANIA >02</CDCOMPANIA>
+						<FEREGISTROSAP >03/03/2025 14:45:44</FEREGISTROSAP>
+						<NMPERIODO >3</NMPERIODO>
+						<CDMONEDA >0</CDMONEDA>
+						<PTTASACAMBIO />
+						<FETASACAMBIO />
+						<NMORDENPAGO >6575268</NMORDENPAGO>
+						<NMFACTURA />
+					</CABECERA>
+					<DOCUMENTOSCXP collection="true">
+						<OBJSAPDOCUMENTOCXPSINI1 class="cxp.contabilidad.servicioscompartidos.suramericana.DTDocumentoCXP">
+							<NMBENEFICIARIOPAGO >34545936</NMBENEFICIARIOPAGO>
+							<CDTIPOIDENTIFICACION >C</CDTIPOIDENTIFICACION>
+							<CDOFICINAREGISTRO >255</CDOFICINAREGISTRO>
+							<PTIMPORTE >105437</PTIMPORTE>
+							<SNCALCULARIMPUESTOS >S</SNCALCULARIMPUESTOS>
+							<CDIVA />
+							<FEPOSIBLEPAGO >03/03/2025 00:00:00</FEPOSIBLEPAGO>
+							<CONDICIONPAGO class="sap.servicioscompartidos.suramericana.DTCondicionPago">
+								<CDCONDICIONPAGO >0001</CDCONDICIONPAGO>
+								<NMDIAS />
+								<PODESCUENTO />
+								<PTIMPORTEDPP />
+							</CONDICIONPAGO>
+							<CDVIAPAGO >GE</CDVIAPAGO>
+							<CUENTABANCARIA class="sap.servicioscompartidos.suramericana.DTCuentaBancaria">
+								<CDPAISBANCO >57</CDPAISBANCO>
+								<CDBANCO >07</CDBANCO>
+								<NMCUENTA >24244396100</NMCUENTA>
+								<CDTIPOCUENTA >01</CDTIPOCUENTA>
+								<DSTITULAR />
+							</CUENTABANCARIA>
+							<CDBLOQUEOPAGO >6</CDBLOQUEOPAGO>
+							<DSTEXTOPOSICION >AUTORIZACIONES SINIESTROS</DSTEXTOPOSICION>
+							<NMPOLIZA >BAN108787784</NMPOLIZA>
+							<CDRAMO >BANVMR</CDRAMO>
+							<CDOPERACION >907</CDOPERACION>
+							<CDCONCEPTO >2</CDCONCEPTO>
+							<CDTIPORESERVA >M</CDTIPORESERVA>
+							<RETENCIONES collection="true">
+								<OBJSAPDATORETENCION1 class="sap.servicioscompartidos.suramericana.DTRetencion">
+									<CDTIPORETENCION >0028</CDTIPORETENCION>
+									<CDINDICADORRETENCION >R</CDINDICADORRETENCION>
+									<PTBASERETENCION >105437</PTBASERETENCION>
+									<PTRETENCION >0</PTRETENCION>
+								</OBJSAPDATORETENCION1>
+								<OBJSAPDATORETENCION2 class="sap.servicioscompartidos.suramericana.DTRetencion">
+									<CDTIPORETENCION >0028</CDTIPORETENCION>
+									<CDINDICADORRETENCION >I</CDINDICADORRETENCION>
+									<PTBASERETENCION >0</PTBASERETENCION>
+									<PTRETENCION >0</PTRETENCION>
+								</OBJSAPDATORETENCION2>
+								<OBJSAPDATORETENCION3 class="sap.servicioscompartidos.suramericana.DTRetencion">
+									<CDTIPORETENCION >0028</CDTIPORETENCION>
+									<CDINDICADORRETENCION >5608</CDINDICADORRETENCION>
+									<PTBASERETENCION >105437</PTBASERETENCION>
+									<PTRETENCION >0</PTRETENCION>
+								</OBJSAPDATORETENCION3>
+							</RETENCIONES>
+							<DETALLESINIESTROS collection="true">
+								<OBJSAPDETALLECXPSINI1 class="cxp.contabilidad.servicioscompartidos.suramericana.DTSiniestrosCxPDetalle">
+									<CDRAMO >081</CDRAMO>
+									<NMPOLIZA >BAN108787784</NMPOLIZA>
+									<CDINTERMEDIARIO >4999</CDINTERMEDIARIO>
+									<NMEXPEDIENTE >BAN0089341835</NMEXPEDIENTE>
+									<NMASEGURADO >34545936</NMASEGURADO>
+									<PTIMPORTE >105437</PTIMPORTE>
+									<CDCENTROCOSTOS >255</CDCENTROCOSTOS>
+									<FEAVISO >28/02/2025 00:00:00</FEAVISO>
+									<FEOCURRENCIA >27/02/2025 00:00:00</FEOCURRENCIA>
+									<CDINDICADORIMPUESTO >0000</CDINDICADORIMPUESTO>
+									<CDOFICINARADICACION >255</CDOFICINARADICACION>
+									<CDCOMPANIAPARAMETRO >02</CDCOMPANIAPARAMETRO>
+									<CDRAMOPARAMETRO >N</CDRAMOPARAMETRO>
+									<CDTIPORESERVA >M</CDTIPORESERVA>
+									<CDOPERACION >907</CDOPERACION>
+									<CDCONCEPTO >2</CDCONCEPTO>
+									<CDCONCEPTOADICIONAL />
+									<DSTEXTOPOSICION >BAN0089341835-ATRSURA1</DSTEXTOPOSICION>
+								</OBJSAPDETALLECXPSINI1>
+							</DETALLESINIESTROS>
+						</OBJSAPDOCUMENTOCXPSINI1>
+					</DOCUMENTOSCXP>
+					<TERCERO class="sap.servicioscompartidos.suramericana.DTTercero">
+						<DSTRATAMIENTO />
+						<DSNOMBRE >Daly Ceneth Muñoz Campo</DSNOMBRE>
+						<DSAPELLIDOS >Muñoz Campo</DSAPELLIDOS>
+						<DSNOMBRES >Daly Ceneth</DSNOMBRES>
+						<DSDIRECCION />
+						<DSAPARTADOAEREO />
+						<CDPAIS >57</CDPAIS>
+						<CDREGION >05</CDREGION>
+						<CDPOBLACION >05001</CDPOBLACION>
+						<CDIDIOMA />
+						<CUENTABANCARIA class="sap.servicioscompartidos.suramericana.DTCuentaBancaria">
+							<CDPAISBANCO >57</CDPAISBANCO>
+							<CDBANCO >07</CDBANCO>
+							<NMCUENTA >24244396100</NMCUENTA>
+							<CDTIPOCUENTA >01</CDTIPOCUENTA>
+							<DSTITULAR />
+						</CUENTABANCARIA>
+						<INFORMACIONFISCAL class="sap.servicioscompartidos.suramericana.DTInformacionFiscal">
+							<NMIDENTIFICACION >34545936</NMIDENTIFICACION>
+							<CDTIPOIDENTIFICACION >C</CDTIPOIDENTIFICACION>
+						</INFORMACIONFISCAL>
+					</TERCERO>
+				</valor>
+				<clave>datos</clave>
+			</parametro-broker>
+		</array-list>
+	</params-entrada-serial>
+	<message-id>ID:2F6E022C1A7E0594E0630ACE02089D44</message-id>
+	<tipo-invocacion>ASINCRONICO</tipo-invocacion>
+	<estado>RUNNING</estado>
+	<cnx-str-task>******</cnx-str-task>
+	<port-name>HTTP_Port</port-name>
+	<entorno-task>WLS</entorno-task>
+	<url-serv-resp></url-serv-resp>
+	<prioridad-vip>4</prioridad-vip>
+	<ubicacion-servicio>https://surasappi.suramericana.com.co/dir/wsdl?p=ic/5073bec1e7f13df6b49925ee2799973a</ubicacion-servicio>
+	<correlation-id>2F6E022C1A7D0594E0630ACE02089D44</correlation-id>
+	<cnx-str-response>******</cnx-str-response>
+	<token-pubs>******</token-pubs>
+	<time-out>60</time-out>
+	<acknowledgement>READY</acknowledgement>
+	<entorno-response>WLS</entorno-response>
+	<namespace-servicio>http://suramericana.servicioscompartidos.contabilidad.cxp</namespace-servicio>
+	<operacion>SI_os_WS_SiniestrosCxP</operacion>
+0 
+	<reintentos>3</reintentos>
+	<headers> BASIC_AUTH_USER=****** </headers>
+	<headers> BASIC_AUTH_PASWWORD=****** </headers>
+	<broker-client-technology>PLSQL</broker-client-technology>
+	<repositorio>WSRR</repositorio>
+	<params-salida-serial>
+		<?xml version="1.0" encoding="iso-8859-1"?>
+		<RESPUESTA>
+			<results class="sap.servicioscompartidos.suramericana.DTRespuestaOperacion">
+				<resultado class="java.lang.String">620039619920002025</resultado>
+				<error />
+			</results>
+		</RESPUESTA>
+	</params-salida-serial>
+	<id-servicio>SiniestrosCxP</id-servicio>
+	<cnx-str-result>******</cnx-str-result>
+	<time-wait>30</time-wait>
+	<version-servicio>1.0</version-servicio>
+	<id-consumidor>SINIESTROS</id-consumidor>
+</broker-message>

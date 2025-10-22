@@ -1,0 +1,181 @@
+{
+   "control":{
+      "sistemaOrigen":"SIN",								---	Constante la define el negocio
+      "identificador":"SIN10000000000000001"				---	Consecutivo Unico del Mensaje define el negocio.
+   },
+   "cabecera":{
+      "determinacionContable":{
+         "canal":"SEG",										--- Constante ---
+         "fuente":"SIN",									--- Constante ---
+         "operacion":"CXP",									--- Constante ---
+         "aplicacion":"79"									--- Constante ---
+      },
+      "parametrosContables":{ 								--- NO APLICA----ENVIAR VACIO
+         "parametro01":"",
+         "parametro02":"",
+         "parametro03":"",
+         "parametro04":"",
+         "parametro05":"",
+         "parametro06":"",
+         "parametro07":"",
+         "parametro08":"",
+         "parametro09":"",
+         "parametro10":""
+      },
+      "datosGenerales":{
+         "fechaDocumento":"2024-08-10", 					---	feFactura.				Fecha de Expedicion recibo (AAAA-MM-DD)---
+         "fechaContable":"2024-08-10",  					--- feContabilizacion.		Fecha en que se afecta la contabilidad (AAAA-MM-DD)---
+         "sociedad":"2000",             					--- cdCompania.				Para Seg de Vida se envía 2000
+         "moneda":"COP",									--- cdMoneda. 				"COP" (0 COP, 1 USD, 8 GBP, 9 EUR, 99 AUD, COP COP. MXN MXN)
+         "referencia":"1007381",    						--- nmOrdenPago.			Numero de recibo, no puede finalizar con la letra i ---
+         "claveReferencia1":"081000457866",					---	nmPoliza.				Numero de la Poliza ---
+         "claveReferencia2":"081",							---	cdRamo.					Numero de Ramo, Subramo ----
+         "texto":"PRODUCCION SEGUROS VIDA",					--- nmFactura.				"RENTA" ---
+         "tipoCambio":"0",									---	DEBEN IR EN CERO ---
+         "fechaTipoCambio":""								---	Enviar Vacío ---
+      },
+      "parametrosAdicionales":[ 							--- NO APLICA --- ENVIAR VACIO
+         {
+            "clave":"",
+            "valor":""
+         }
+      ]
+   },
+   "posiciones":[
+      {
+         "resumen":{
+            "parametrosContables":{
+               "parametro01":"02",							--- cdCompania: 01, 02, 30
+               "parametro02":"T", 							--- IF cdConcepto termina con "A": cdTipoReserva + "A" ELSE cdTipoReserva
+               "parametro03":"907",							--- cdOperacion
+               "parametro04":"", 
+               "parametro05":"",
+               "parametro06":"",-
+               "parametro07":"", 
+               "parametro08":"",
+               "parametro09":"",
+               "parametro10":"",
+            },
+            "datosGenerales":{
+			   "claseCuenta":"K",							--- Constante "K". 			(S cuenta de mayor, D deudor, K= acreedor) ---
+               "sociedad":"",								--- Enviar vacío ---
+               "valor":"206000000",							--- ptImporte. 				Importe Neto a Cobrar ---
+               "oficina":"4030",							--- cdOficinaRadicacion. 	División u Oficina ---
+               "centroCostos":"4030",						--- cdCentroCostos.			Centro de costos
+               "indicadorBloqueo":"",						---	Enviar Vacío. 			Ver archivo Homologacion Bloqueo Pago.XLSX
+               "viaPago":"J",								---	cdViaPago.				J Caja; D débito automático (2 2, 6 6, 7 7,9 9,C C,CA J,CB D,CE N,CF N,DV 4,E E,FA M,FI F,GE T,J J,K K,ND Y,NM O,O O,PB D,PC P,PR S,RA M,RM F,SL L,ST L,T T,X C,XC X,Z Z) --
+               "texto":"0810099700755-LINAJATE",			--- dsTextoPosicion.		Deben ir en las 3 primeras posiciones concatenados el tipo de movimiento y la operación y luego de una espacio la descripcion. Ej. D01 Directo Poliza Nueva
+               "claveReferencia1":"081000457866",			---	nmPoliza.				Numero de la Poliza--
+               "claveReferencia2":"AAV",					---	IF cdTipoReserva=T THEN [IF cdRamo=081 THEN AAV ELSE cdRamo END] ELSE cdRamo END.					Numero de Ramo, Subramo ---
+               "claveReferencia3":"6886",					--- cdIntermediario.		Codigo Asesor--
+               "asignacion":"1152184318",					--- NIT.					
+               "fechaInicio":"2024-07-01",					--- feValor.				Fecha inicio Vigencia del recibo (AAAA-MM-DD)---
+               "fechaVencimiento":"2024-08-01",				---	feOcurrencia.			Se debe enviar la fecha fin de vigencia del recibo (AAAA-MM-DD)---
+               "fechaExpedicion":"2024-07-05",				--- feFactura.				Fecha de Expedicion recibo (AAAA-MM-DD)---
+               "indicadorImpuesto":""						---	cdIva.					El indicador definido por el área de impuestos --
+            },
+            "descuento":{									--- Descuentos
+               "condicionPago":"0001",						--- cdCondicionPago.		(0001,0 DCON,0000 0001,0001 0001,0008 0008,0025 0025,1 TY01,10 TY10,11 TY11,12 TY12,2 TY02,3 TY03,4 TY04,5 TY05,6 TY06,7 TY07,8 TY08,9 TY09) DCON contado-----
+               "base":"0", 									--- ptImporteDPP.	----
+               "valor":"0", 								--- Puede ir en Cero ----
+               "dias01":"0", 								--- nmDias.			----
+               "dias02":"0",		 						--- Puede ir en Cero ----
+               "dias03":"0", 								--- Puede ir en Cero ----
+               "porcentaje01":"0.0",						--- poDescuento.	----
+               "porcentaje02":"0.0"							--- Puede ir en Cero ----
+            },
+            "retenciones":[									--- Retenciones
+               {
+                  "valorRetencion":"120000000",				--- ptRetencion.
+                  "valorBaseRetencion":"200000000",			--- ptBaseRetencion.
+                  "tipoRetencion":"F5",						--- cdTipoRetencion.
+                  "indicadorRetencion":"VI"					--- cdIndicadorRetencion.
+               }
+            ],
+            "tercero":{
+               "general":{
+		          "claseImpuesto":"01",						--- 01 Persona Natural, 02 Persona Juridica
+                  "grupoCuenta":"CLNE", 					--- CLNE: Cliente, ACRE: Acreedores, PRAD: Proveedores Amtivo., PRNO: Prov. Negocio, etc. LOS DEFINE EL NEGOCIO ---
+                  "tipoIdentificacion":"13",				--- cdTipoIdentificacion.	Ver Archivo de Tipos de Identificacion ---
+                  "identificacion":"1152184318",			--- nmIdentificacion.		
+                  "primerNombre":"JOSE",					--- dsNombres.
+                  "segundoNombre":"LEONARDO",				--- dsNombres.
+                  "primerApellido":"LOPEZ",					--- dsApellidos.
+                  "segundoApellido":"VALENCIA"				--- dsApellidos.
+               },
+               "direccion":{
+                  "direccion":"CL 13 E  65 C 55 BARRIO BOSQUES DE",	--- dsDireccion.
+                  "pais":"CO",								---	cdPais.					"CO" Pais Colombia ---
+                  "region":"05",							---	cdRegion.				Revisar Tabla de regiones ---
+                  "poblacion":"05001",						---	cdPoblacion.			Si es vacio hoy se pone "05001" por defecto. Revisar Tabla de poblaciones ---
+                  "telefono":"2359875",						--- NUEVO MENSAJERO
+                  "celular":"",								--- NUEVO MENSAJERO
+                  "correoElectronico":"leomoto1234@hotmail.com"	--- NUEVO MENSAJERO
+               },
+               "pagadorAlternativo":{						---	Enviar Vacío ---
+                  "tipoIdentificacion":"",
+                  "identificacion":""
+               },
+               "datosBancarios":{							--- Servicio de cuentas bancarias
+                  "paisBanco":"",							--- cdPaisBanco.
+                  "banco":"",								--- cdBanco.
+                  "cuenta":"",								--- nmCuenta.
+                  "tipoCuenta":"",							--- cdTipoCuenta.			(01 Cuenta corriente, 02 Cuenta de ahorros, 03 TC, 04 Libro mayor)
+                  "tipoIdentificacion":"",					--- cdTipoIdentificacion
+                  "identificacion":"",						--- nmIdentificacion
+                  "nombreTitular":"",						--- dsTitular
+                  "apuntadorCuenta":""						--- NUEVO MENSAJERO.		Usar servicio de cuentas bancarias
+               },
+               "determinacionBancaria":{					--- Para que se determine la asociación se deben poblar estos dos campos ---
+                  "tipoIdentificacion":"",					---	cdTipoIdentificacion.	Ver Archivo de Tipos de Identificacion---
+                  "identificacion":"",						--- nmIdentificacion
+                  "claveReferencia1":"", 					--- nmPoliza.				Poliza
+                  "claveReferencia2":""  					--- claveReferencia2		Numero de Ramo, Subramo ---
+               }
+            },
+            "parametrosAdicionales":[						--- Enviar Vacío--
+               {
+                  "clave":"",								--- key
+                  "valor":""								--- value
+               }
+            ]
+         },
+         "detalle":{
+            "parametrosContables":{
+               "parametro01":"02",							--- cdCompaniaParametro		01, 02, 30
+               "parametro02":"N", 							--- IF cdCompania=30 AND cdConcepto=1C THEN N ELSE cdRamoParametro END (041,41,N, ,092,92,009,012BA,012BR,012FI,012OT,013,014,019,020,030,032,033,034,040,081TA)
+               "parametro03":"T",  							--- cdTipoReserva			(T,TA,M,MA) ---
+               "parametro04":"907",							--- cdOperacion				(907,916,907P,916P,907E,916E,907PE,916PE)
+               "parametro05":"1", 							--- cdConcepto				(1,1A,23,8,9,CON,PAR,1C, ,11,13,2,2A,2C,3,7,CO,MO,10,12,12A)
+               "parametro06":"",
+               "parametro07":"",
+               "parametro08":"",
+               "parametro09":"",
+               "parametro10":"",
+            },
+            "datosGenerales":{
+               "claseCuenta":"S",							--- Constante "S". 			(S cuenta de mayor, D deudor, K= acreedor) ---
+               "sociedad":"", 								--- Enviar vacío --- 
+               "valor":"206000000",							--- pt_importe.				Importe CON Iva
+               "oficina":"4030",							--- cdOficinaRadicacion. 	División u Oficina ---
+               "centroCostos":"4030", 						--- cdCentroCostos.			Centro de costos	
+               "texto":"0810099700755",						--- nmExpediente.			Deben ir en las 3 primeras posiciones concatenados el tipo de movimiento y la operación y luego de una espacio la descripcion. Ej. D01 Directo Poliza Nueva
+               "claveReferencia1":"081003527765", 			--- nmPoliza.				Numero de la Poliza--
+               "claveReferencia2":"AAV",					---	IF cdTipoReserva=T THEN [IF cdRamo=081 THEN AAV ELSE cdRamo END] ELSE cdRamo END.					Numero de Ramo, Subramo ---
+               "claveReferencia3":"6886",					--- cdIntermediario.		Codigo Asesor--
+               "asignacion":"1152184318",					--- IF ((IF cdConceptoAdicional<>"" THEN cdConceptoAdicional ELSE cdConcepto END) FixValues F,1C,2C = S defecto N) = "" THEN nmAsegurado ELSE "" END
+	           "fechaInicio":"2024-07-01",					--- feAviso.				Fecha inicio Vigencia del recibo--
+               "fechaVencimiento":"2024-08-01",				---	feOcurrencia.			Se debe enviar la fecha fin de vigencia del recibo--
+               "fechaExpedicion":"2024-07-05",				--- feFactura.				Fecha de Expedicion recibo---       
+               "indicadorImpuesto":"D0"						--- cdIndicadorImpuestos.	Indicador de Impuesto
+            },
+            "parametrosAdicionales":[
+               {
+                  "clave":"",								--- key
+                  "valor":""								--- value
+               }
+            ]
+         }
+      }
+   ]
+}
