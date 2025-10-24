@@ -8,7 +8,7 @@
 -- ============================================================================
 
 declare
-   l_siniestro      OPS$PROCEDIM.obj_sap_cxp_siniestros;
+   l_siniestro      OPS$PROCEDIM.OBJ_SAP_CXP_SINIESTROS;
    l_doc            OPS$PROCEDIM.obj_sap_documento_cxp_sini;
    l_ret1           OPS$PROCEDIM.obj_sap_dato_retencion;
    l_ret2           OPS$PROCEDIM.obj_sap_dato_retencion;
