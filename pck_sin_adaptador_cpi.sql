@@ -48,21 +48,25 @@ create or replace package body pck_sin_adaptador_cpi is
       v_idx_param         pls_integer;
       v_idx_param_pos     pls_integer;
       v_idx_pos           pls_integer;
-      v_codigo_municipio  varchar2(100); -- Nuevo: para guardar el código de municipio de la retención
       o_obj               obj_cpi_causacion_contable;
+
+      v_codigo_municipio  varchar2(100);
+      v_correlation_id     varchar2(100);
    begin
+
+      v_correlation_id := pck_gnl_integration_utils.fn_gnl_get_correlation_id();
+
     -- HEADERS
       v_header := obj_cpi_headers(
-         request_id              => 'Prueba_Fenix',
-         ref_src_1               => '123',
+         request_id              => v_correlation_id,
+         ref_src_1               => 'ref-001',
          target_system           => 'sap',
          target_system_process   => 'siniestros_cxp',
          source_application_name => 'atr',
          integration_method      => 'bd-async',
          key                     => '57W1hRyXRLSiswMg9RSL6DOGymReG9paAKY33CkGBltwBGMz',
-         secret                  => 'gAAAAABo1avf8BCP-W3xacUJPQXwJ9tE9Fqb7i3ifloNOQSxkz-94Yi1Kn77g0FgeWc8Ev30UpwTi4eHZqo_1OKRV8i9xHE2mMT9RzVoWBpmIz8zuPQFKh4qsL6jf5Xasqf72gcyn7_i1yNDD7k2LotUCQzkCPmZbTFgU34YjhY2jxjMkr_M_o4='
-         ,
-         correlation_id          => pck_gnl_integration_utils.fn_gnl_get_correlation_id()
+         secret                  => 'gAAAAABo1avf8BCP-W3xacUJPQXwJ9tE9Fqb7i3ifloNOQSxkz-94Yi1Kn77g0FgeWc8Ev30UpwTi4eHZqo_1OKRV8i9xHE2mMT9RzVoWBpmIz8zuPQFKh4qsL6jf5Xasqf72gcyn7_i1yNDD7k2LotUCQzkCPmZbTFgU34YjhY2jxjMkr_M_o4=',
+         correlation_id          => v_correlation_id
       );
 
     -- CONTROL
