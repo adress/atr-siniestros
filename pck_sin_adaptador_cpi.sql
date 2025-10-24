@@ -1,21 +1,21 @@
 /*
     ============================================================================
-    Archivo: adaptadores/pck_sin_adaptador_cpi.sql
-    Descripción: Paquete adaptador que mapea objetos origen (por ejemplo,
+    Archivo: pck_sin_adaptador_cpi.sql
+    Descripcion: Paquete adaptador que mapea objetos origen (por ejemplo,
                  OBJ_SAP_CXP_SINIESTROS) a OBJ_CPI_CAUSACION_CONTABLE.
     Autor: Jaime Andres Ortiz
     Fecha: 2025-09-17
-    Versión: 1.0.0
+    Version: 1.0.0
     Notas:
       - Depende de los tipos OBJ_CPI_CAUSACION_CONTABLE y tipos relacionados.
-      - Usado para transformar mensajes de origen a la estructura estándar CPI.
+      - Usado para transformar mensajes de origen a la estructura estandar CPI.
 
     Cambios:
-      - 2025-09-17: Cabecera añadida.
+      - 2025-09-17: Cabecera anadida.
     ============================================================================
 */
 
-create or replace package pck_sin_adaptador_cpi is
+create or replace package OPS$PROCEDIM.pck_sin_adaptador_cpi is
   -- Mapea un objeto OBJ_SAP_CXP_SINIESTROS a OBJ_CPI_CAUSACION_CONTABLE
    function map_sap_cxp_to_causacion (
       i_obj in obj_sap_cxp_siniestros
@@ -24,7 +24,7 @@ end pck_sin_adaptador_cpi;
 /
 
 
-create or replace package body pck_sin_adaptador_cpi is
+create or replace package body OPS$PROCEDIM.pck_sin_adaptador_cpi is
 
    function map_sap_cxp_to_causacion (
       i_obj in obj_sap_cxp_siniestros
@@ -94,11 +94,11 @@ create or replace package body pck_sin_adaptador_cpi is
          determinacioncontable => obj_cpi_causa_det_contable(
             canal      => i_obj.cabecera.datosconversionorigen.cdcanal,
             fuente     => i_obj.cabecera.datosconversionorigen.cdfuente,
-            operacion  => 'CXP', -- No existe nmOperacion en la fuente, pero se pone el del excel #confirmar
-            aplicacion => i_obj.cabecera.datosconversionorigen.nmaplicacion  -- 79
+            operacion  => 'CXP', 
+            aplicacion => i_obj.cabecera.datosconversionorigen.nmaplicacion
          ),
          datosgenerales        => obj_cpi_causa_cab_datos_generales(
-            sociedad         => i_obj.cabecera.cdcompania, -- dato homologado #confrimar
+            sociedad         => i_obj.cabecera.cdcompania,
             fechadocumento   => to_char(i_obj.cabecera.fefactura,'YYYY-MM-DD'),
             fechacontable    => to_char(i_obj.cabecera.feregistrosap,'YYYY-MM-DD'),
             moneda           => i_obj.cabecera.cdmoneda,
@@ -126,11 +126,11 @@ create or replace package body pck_sin_adaptador_cpi is
       -- Retenciones
       -- posiciones[i].resumen.retenciones[j]
          v_retenciones := tab_cpi_causa_pos_retencion();
-         v_codigo_municipio := null; -- Inicializar antes de procesar retenciones
+         v_codigo_municipio := null;
          v_idx_ret := v_doc.retenciones.first;
          while v_idx_ret is not null loop
             v_ret := v_doc.retenciones(v_idx_ret);
-            -- Si el indicador no es R ni I, guardar el código de municipio
+            -- Si el indicador no es R ni I, guardar el codigo de municipio
             if v_ret.cdIndicadorRetencion not in ('R', 'I') then
                v_codigo_municipio := v_ret.cdIndicadorRetencion;
             end if;
@@ -159,7 +159,7 @@ create or replace package body pck_sin_adaptador_cpi is
 
          v_tercero := obj_cpi_causa_pos_tercero(
             general               => obj_cpi_causa_pos_tercero_general(
-               codigotercero      => '',  --#pendiente  (01 Persona Natural, 02 Persona Juridica)
+               codigotercero      => '',
                tipoidentificacion => i_obj.tercero.informacionfiscal.cdtipoidentificacion,
                identificacion     => i_obj.tercero.informacionfiscal.nmidentificacion
             ),
@@ -226,25 +226,25 @@ create or replace package body pck_sin_adaptador_cpi is
                indicadorbloqueo  => v_doc.cdbloqueopago,
                viapago           => v_doc.cdviapago,
                fechainicio       => to_char(v_doc.detalleSiniestros(v_doc.detalleSiniestros.first).feaviso, 'YYYY-MM-DD'),
-               clavereferencia1  => v_doc.nmpoliza,         --número de identificación fiscal del tercero enviar nmIdentificacion del tercero
+               clavereferencia1  => v_doc.nmpoliza,         --numero de identificacion fiscal del tercero enviar nmIdentificacion del tercero
                clavereferencia2  => v_doc.cdramo,           
                clavereferencia3  => '',                     -- Enviar vacio
                asignacion        => null,                   -- #Enviar nmIdentificacion del tercero
                texto             => v_doc.detalleSiniestros(v_doc.detalleSiniestros.first).dsTextoPosicion, -- dsTextoPosicion del primer detalle
-               contrato          => '',                     -- #pendiente Luis:(Si se maneja para unos pagos como onorarios pero no se almacena el numero del contrato)
+               contrato          => '',                     
                lineadenegocio    => v_doc.cdramo,          
                asesor            => v_doc.detalleSiniestros(v_doc.detalleSiniestros.first).cdIntermediario, -- Primer detalle: cdIntermediario
                zreferencia01     => v_doc.nmpoliza,         
-               zreferencia02     => null,                   -- #pendiente *<Tipo de operacion> (PENDIENTE SAP)
-               zreferencia03     => 'Daly Ceneth Munoz Campo', --i_obj.tercero.dsNombre, -- Nombre completo del tercero (Zznombre)
-               zreferencia04     => i_obj.tercero.informacionfiscal.nmIdentificacion, -- NIT (ZZNIT)
-               zreferencia05     => v_codigo_municipio,      -- Código de municipio si aplica
+               zreferencia02     => null,                   
+               zreferencia03     => i_obj.tercero.dsNombre,
+               zreferencia04     => i_obj.tercero.informacionfiscal.nmIdentificacion,
+               zreferencia05     => v_codigo_municipio,
                zreferencia06     => v_doc.detalleSiniestros(v_doc.detalleSiniestros.first).nmExpediente, -- Primer NMEXPEDIENTE
-               zreferencia07     => null,                   -- #pendiente *<Poliza lider> Luis: No aplica 
-               zreferencia08     => null,                   -- #pendiente *<Certificado lider> Luis: No aplica 
-               zreferencia09     => null,                   -- #pendiente *<Valores totales de factura> Luis: (si se puede enviar pero requiere un desarrollo)
+               zreferencia07     => null,                   
+               zreferencia08     => null,                   
+               zreferencia09     => null,                   
                zreferencia10     => '',
-               zfecha01          => to_char(v_doc.detalleSiniestros(v_doc.detalleSiniestros.first).feOcurrencia, 'YYYY-MM-DD') -- Fecha fin vigencia (ZZFECVEN)
+               zfecha01          => to_char(v_doc.detalleSiniestros(v_doc.detalleSiniestros.first).feOcurrencia, 'YYYY-MM-DD') 
             ),
             descuento             => v_descuento,
             retenciones           => v_retenciones,
@@ -295,7 +295,7 @@ create or replace package body pck_sin_adaptador_cpi is
                   ),
                   -- posiciones[i].detalle[m].datosGenerales
                   datosgenerales => obj_cpi_causa_pos_datos_generales(
-                     clasecuenta       => 'S',                                   -- S cuenta de mayor
+                     clasecuenta       => 'S',                                  
                      sociedad          => '',                                    
                      valor             => to_char(v_detalle_cxp.ptImporte),
                      indicadorimpuesto => v_detalle_cxp.cdIndicadorImpuesto,
@@ -313,14 +313,14 @@ create or replace package body pck_sin_adaptador_cpi is
                      lineadenegocio    => null,
                      asesor            => null,
                      zreferencia01     => v_detalle_cxp.nmPoliza,
-                     zreferencia02     => '',                                                      -- #pendiente SAP
-                     zreferencia03     => 'Daly Ceneth Munoz Campo',--i_obj.tercero.dsNombre,                                  
+                     zreferencia02     => '',                                                      
+                     zreferencia03     => i_obj.tercero.dsNombre,                                
                      zreferencia04     => i_obj.tercero.informacionfiscal.nmIdentificacion,        
-                     zreferencia05     => v_codigo_municipio,                                                    -- #pendiente SAP
+                     zreferencia05     => v_codigo_municipio,                                                    
                      zreferencia06     => v_detalle_cxp.nmExpediente,
-                     zreferencia07     => null,                                                    -- #pendiente SAP
-                     zreferencia08     => null,                                                    -- #pendiente SAP
-                     zreferencia09     => null,                                                    -- #pendiente SAP
+                     zreferencia07     => null,                                                    
+                     zreferencia08     => null,                                                    
+                     zreferencia09     => null,                                                    
                      zreferencia10     => '',
                      zfecha01          => to_char(v_detalle_cxp.feOcurrencia, 'YYYY-MM-DD')
                   ),
@@ -330,7 +330,7 @@ create or replace package body pck_sin_adaptador_cpi is
             end loop;
          end if;
 
-         -- Agregar la posición
+         -- Agregar la posicion
          -- posiciones[i]
          v_posiciones(v_posiciones.last) := obj_cpi_causa_posicion(
             resumen => v_resumen,
