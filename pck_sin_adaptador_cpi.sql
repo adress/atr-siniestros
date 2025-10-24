@@ -52,9 +52,23 @@ create or replace package body pck_sin_adaptador_cpi is
 
       v_codigo_municipio  varchar2(100);
       v_correlation_id     varchar2(100);
+      v_key    tcob_parametros_sap.cdusuario%type;
+      v_secret tcob_parametros_sap.cdclave%type;
    begin
 
       v_correlation_id := pck_gnl_integration_utils.fn_gnl_get_correlation_id();
+
+      -- Obtener key y secret desde tcob_parametros_sap
+      begin
+         select cdusuario, cdclave
+           into v_key, v_secret
+           from tcob_parametros_sap
+          where cdproceso = 'ART_SINI';
+      exception
+         when no_data_found then
+            v_key := null;
+            v_secret := null;
+      end;
 
     -- HEADERS
       v_header := obj_cpi_headers(
@@ -64,8 +78,8 @@ create or replace package body pck_sin_adaptador_cpi is
          target_system_process   => 'siniestros_cxp',
          source_application_name => 'atr',
          integration_method      => 'bd-async',
-         key                     => '57W1hRyXRLSiswMg9RSL6DOGymReG9paAKY33CkGBltwBGMz',
-         secret                  => 'gAAAAABo1avf8BCP-W3xacUJPQXwJ9tE9Fqb7i3ifloNOQSxkz-94Yi1Kn77g0FgeWc8Ev30UpwTi4eHZqo_1OKRV8i9xHE2mMT9RzVoWBpmIz8zuPQFKh4qsL6jf5Xasqf72gcyn7_i1yNDD7k2LotUCQzkCPmZbTFgU34YjhY2jxjMkr_M_o4=',
+         key                     => v_key,
+         secret                  => v_secret,
          correlation_id          => v_correlation_id
       );
 
@@ -96,8 +110,8 @@ create or replace package body pck_sin_adaptador_cpi is
                                  .detalleSiniestros(i_obj.documentoscxp(i_obj.documentoscxp.first)
                                  .detalleSiniestros.first).cdramo,
             texto            => i_obj.cabecera.nmfactura,
-            tipocambio       => '', -- Siempre vacio en siniestros no hay dolares
-            fechatipocambio  => ''  -- Segun homo previa
+            tipocambio       => '',
+            fechatipocambio  => ''
          ),
          parametrosadicionales => tab_cpi_causa_param_adicional(obj_cpi_causa_param_adicional('', ''))
       );
