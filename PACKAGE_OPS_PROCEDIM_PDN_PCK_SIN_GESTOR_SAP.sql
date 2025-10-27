@@ -157,6 +157,8 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
 		FROM T999_PARAMETROS P
 		WHERE P.DSPARAMETRO = 'PAGO_SURABROKER';
 
+  lvaUsaApiGeeSiniCxP         VARCHAR2(10);
+  lobjCaus                    OBJ_CPI_CAUSACION_CONTABLE;
 	BEGIN
 	-- 01/12/2024 josebuvi Desarrollo para verificacion de retencion ramos de vida
         BEGIN
@@ -197,7 +199,14 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
 		 VALUES(ivaNmExpediente, ivaNmPagoAutorizacion, 'Pendiente', v_xml.getClobval(), lvaErrorLog);
 
 		  ELSE
-			  PCK_SBK_SURABROKER.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjPago);
+        lvaUsaApiGeeSiniCxP := PCK_PARAMETROS.FN_GET_PARAMETROV2(lvaCdRamo, '%', 'USA_API_SINICXP', SYSDATE, '*', '*', '*', '*', '*');
+        IF NVL(lvaUsaApiGeeSiniCxP, 'N') = 'S' THEN
+          lobjCaus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(lobjPago);
+          PCK_INTEGRATION_CPI.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjCaus, 'TATR_ASYNC_TX_1');
+        ELSE
+			    PCK_SBK_SURABROKER.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjPago);
+        END IF;
+        
 		END IF;
 
 		 UPDATE SIN_PAGOS_DET
