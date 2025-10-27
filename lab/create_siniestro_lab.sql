@@ -24,12 +24,32 @@ declare
    l_datos_conv     obj_sap_datos_conversion;
    l_obj_cxp        obj_sap_cxp_siniestros;
    l_obj_caus       OBJ_CPI_CAUSACION_CONTABLE;
+   lvaCdRamo        VARCHAR2(10); -- Ajustar según corresponda
+   lvaUsaApiGeeSiniCxP VARCHAR2(10);
 begin
   -- CABECERA
    l_datos_conv := obj_sap_datos_conversion(
       'SIN', -- CDFUENTE
       79,    -- NMAPLICACION
       'SEG'  -- CDCANAL
+   );
+
+   -- ==========================================
+   -- Parametrización para decidir el flujo
+   -- ==========================================
+   -- Ejemplo: el ramo puede ser parametrizado, aquí fijo para laboratorio
+   -- En productivo, lvaCdRamo debe venir del contexto del siniestro
+   -- Se recomienda ajustar según el caso real
+   -- ==========================================
+   lvaCdRamo := '081'; -- Ajustar según corresponda
+
+   -- Consultar el parámetro USA_API_SINICXP
+   lvaUsaApiGeeSiniCxP := PCK_PARAMETROS.FN_GET_PARAMETROV2(
+      lvaCdRamo,
+      '%',
+      'USA_API_SINICXP',
+      SYSDATE,
+      '*','*','*','*','*'
    );
    l_cabecera := obj_sap_cabecera_cxp_sini(
       l_datos_conv,
@@ -177,14 +197,20 @@ begin
    );
    l_siniestro.tyinf.dspuerto := 'HTTP_Port';
 
-  -- Remplazo envio a la firma asíncrona de surabroker
-  -- PCK_SBK_CORE.SP_EJECUTAR_SERVICIO_ASINCRONO(l_siniestro);
+  -- Decidir el flujo de integración según el parámetro
+  -- Si el parámetro es 'S', ejecuta solo el flujo API.
+  -- Si es 'N' o NULL, ejecuta el flujo tradicional (SuraBroker) por defecto.
+  IF NVL(lvaUsaApiGeeSiniCxP, 'N') = 'S' THEN
+     -- Solo ejecutar el nuevo flujo vía API (CPI)
+     lObjCxp := treat(l_siniestro as OBJ_SAP_CXP_SINIESTROS);
+     lObjCaus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(lObjCxp); --convierte el objeto sap a causacion contable
+     PCK_INTEGRATION_CPI.SP_EJECUTAR_SERVICIO_ASINCRONO(lObjCaus, 'TATR_ASYNC_TX_1'); --convierte la causacion en JSON y guarda en la tabla
+     --dbms_output.put_line('Flujo API ejecutado (CPI).');
+  ELSE
+     -- Ejecutar el flujo tradicional (SuraBroker)
+     PCK_SBK_CORE.SP_EJECUTAR_SERVICIO_ASINCRONO(l_siniestro);
+     --dbms_output.put_line('Flujo tradicional ejecutado (SuraBroker).');
+  END IF;
 
-    --- Cast explícito y envio a la cola asincrona
-   l_obj_cxp := treat(l_siniestro as OBJ_SAP_CXP_SINIESTROS);
-   l_obj_caus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(l_obj_cxp); --convierte el objeto sap a causacion contable
-   PCK_INTEGRATION_CPI.SP_EJECUTAR_SERVICIO_ASINCRONO(l_obj_caus, 'TATR_ASYNC_TX_1'); --convierte la causacion en JSON y guarda en la tabla
-
-   --dbms_output.put_line('Siniestro enviado a la cola asíncrona.');
 end;
 /
