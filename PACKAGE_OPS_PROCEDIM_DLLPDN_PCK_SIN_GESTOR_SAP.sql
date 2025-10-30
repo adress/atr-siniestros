@@ -1,5 +1,5 @@
 
-  CREATE OR REPLACE EDITIONABLE PACKAGE "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" IS
+  CREATE OR REPLACE PACKAGE OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
 
   gvaPackage             VARCHAR2(30):= 'PCK_SIN_GESTOR_SAP';
 
@@ -67,17 +67,17 @@
 \**-----------------------------------------------------------------------------------------
   Procedure que entrega los valores calculados para poblar el modelo de Impuestos y enviar a SAP
   #author Juan Guillermo Henao Montoya
-  Fecha Creaciï¿½n: 2013/07/06
-  Fecha Modificaciï¿½n:
-  Motivo Modificaciï¿½n:
+  Fecha Creación: 2013/07/06
+  Fecha Modificación:
+  Motivo Modificación:
 
-  #param ivaCdSociedad           Cï¿½digo de la compaï¿½ï¿½a sobre la cual se calcula el impuesto
-  #param ivaDniBenePago          Documento Nacional de Identificaciï¿½n del beneficiario de pago
+  #param ivaCdSociedad           Código de la compañía sobre la cual se calcula el impuesto
+  #param ivaDniBenePago          Documento Nacional de Identificación del beneficiario de pago
   #param inuPtImporte            Valor bruto de la orden de pago
   #param inuPtDeducible          Valor del deducible a descontarle al asegurado
-  #param ivaCdMoneda             Cï¿½digo de la moneda sobre la cual se hace el pago
+  #param ivaCdMoneda             Código de la moneda sobre la cual se hace el pago
   #param inuPoIVA                porcentaje de IVA calculado
-  #param ivaCdCodigoRetencion    Cï¿½digo de la retenciï¿½n a aplicar.  #param ivaCdIndicadorRetencion Tipo de retencion a Calcular R Retefiemte, I ReteIVA, 
+  #param ivaCdCodigoRetencion    Código de la retención a aplicar.  #param ivaCdIndicadorRetencion Tipo de retencion a Calcular R Retefiemte, I ReteIVA, 
   #param ovaMensajeTecnico       Mensaje tecnico en caso de error
   #param ovaMensajeUsuario       Mensaje para el usuario en caso de error
   *\
@@ -129,7 +129,7 @@
 */
 END PCK_SIN_GESTOR_SAP;
 /
-CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" IS
+CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
 
 	PROCEDURE SP_ENVIAR_MENSAJE_CXP(ivaNmExpediente        IN SIN_PAGOS_DET.EXPEDIENTE%TYPE,
 																	ivaNmPagoAutorizacion  IN SIN_PAGOS_DET.NUMERO_PAGO_AUTORIZACION%TYPE,
@@ -199,7 +199,12 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
      VALUES(ivaNmExpediente, ivaNmPagoAutorizacion, 'Pendiente', v_xml.getClobval(), lvaErrorLog);
 
       ELSE
+		IF NVL(lvaUsaApiGeeSiniCxP, 'N') = 'S' THEN
+          lobjCaus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(lobjPago);
+          PCK_INTEGRATION_CPI.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjCaus, 'TATR_ASYNC_TX_1');
+        ELSE
       	  PCK_SBK_SURABROKER.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjPago);
+        END IF;
     END IF;
 
      UPDATE SIN_PAGOS_DET
@@ -364,8 +369,8 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
      /*
      - Modificado por: Sergio Garcia 2016/03/28
      - Asunto: Llamar al nuevo adaptador que se encarga de enviar la 
-     -         informaciï¿½n de PDN a SINFO
-     - Proyecto: [Rediseï¿½o Cierre de Seguros]
+     -         información de PDN a SINFO
+     - Proyecto: [Rediseño Cierre de Seguros]
      */
      
      BEGIN
@@ -378,7 +383,7 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
            ovaMensajeTecnico:=lvaMensajeTecnicoExt;
            ovaMensajeUsuario:=lvaMensajeUsuarioExt;
      END;
-     --Fin modificaciï¿½n Sergio Garcia.     
+     --Fin modificación Sergio Garcia.     
      
      
      
@@ -447,8 +452,8 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
      /*
      - Modificado por: Sergio Garcia 2016/03/28
      - Asunto: Llamar al nuevo adaptador que se encarga de enviar la 
-     -         informaciï¿½n de PDN a SINFO
-     - Proyecto: [Rediseï¿½o Cierre de Seguros]
+     -         información de PDN a SINFO
+     - Proyecto: [Rediseño Cierre de Seguros]
      */
 
      BEGIN
@@ -461,7 +466,7 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
            ovaMensajeTecnico:=lvaMensajeTecnicoExt;
            ovaMensajeUsuario:=lvaMensajeUsuarioExt;
      END;
-     --Fin modificaciï¿½n Sergio Garcia.
+     --Fin modificación Sergio Garcia.
      
   EXCEPTION
       WHEN lexErrorProcedimientoExt THEN
@@ -528,8 +533,8 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
      /*
      - Modificado por: Sergio Garcia 2016/03/28
      - Asunto: Llamar al nuevo adaptador que se encarga de enviar la 
-     -         informaciï¿½n de PDN a SINFO
-     - Proyecto: [Rediseï¿½o Cierre de Seguros]
+     -         información de PDN a SINFO
+     - Proyecto: [Rediseño Cierre de Seguros]
      */
      
      BEGIN
@@ -542,7 +547,7 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
            ovaMensajeTecnico:=lvaMensajeTecnicoExt;
            ovaMensajeUsuario:=lvaMensajeUsuarioExt;
      END;
-     --Fin modificaciï¿½n Sergio Garcia. 
+     --Fin modificación Sergio Garcia. 
           
   EXCEPTION
       WHEN lexErrorProcedimientoExt THEN
