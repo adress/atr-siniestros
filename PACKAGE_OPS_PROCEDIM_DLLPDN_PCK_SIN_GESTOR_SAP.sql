@@ -67,17 +67,17 @@
 \**-----------------------------------------------------------------------------------------
   Procedure que entrega los valores calculados para poblar el modelo de Impuestos y enviar a SAP
   #author Juan Guillermo Henao Montoya
-  Fecha Creación: 2013/07/06
-  Fecha Modificación:
-  Motivo Modificación:
+  Fecha Creaciï¿½n: 2013/07/06
+  Fecha Modificaciï¿½n:
+  Motivo Modificaciï¿½n:
 
-  #param ivaCdSociedad           Código de la compañía sobre la cual se calcula el impuesto
-  #param ivaDniBenePago          Documento Nacional de Identificación del beneficiario de pago
+  #param ivaCdSociedad           Cï¿½digo de la compaï¿½ï¿½a sobre la cual se calcula el impuesto
+  #param ivaDniBenePago          Documento Nacional de Identificaciï¿½n del beneficiario de pago
   #param inuPtImporte            Valor bruto de la orden de pago
   #param inuPtDeducible          Valor del deducible a descontarle al asegurado
-  #param ivaCdMoneda             Código de la moneda sobre la cual se hace el pago
+  #param ivaCdMoneda             Cï¿½digo de la moneda sobre la cual se hace el pago
   #param inuPoIVA                porcentaje de IVA calculado
-  #param ivaCdCodigoRetencion    Código de la retención a aplicar.  #param ivaCdIndicadorRetencion Tipo de retencion a Calcular R Retefiemte, I ReteIVA, 
+  #param ivaCdCodigoRetencion    Cï¿½digo de la retenciï¿½n a aplicar.  #param ivaCdIndicadorRetencion Tipo de retencion a Calcular R Retefiemte, I ReteIVA, 
   #param ovaMensajeTecnico       Mensaje tecnico en caso de error
   #param ovaMensajeUsuario       Mensaje para el usuario en caso de error
   *\
@@ -157,7 +157,8 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
     SELECT P.DSVALOR_PARAMETRO
       FROM T999_PARAMETROS P
      WHERE P.DSPARAMETRO = 'PAGO_SURABROKER';
-    
+
+  lvaUsaApiGeeSiniCxP VARCHAR2(10);
 	BEGIN
         -- 22/11/2024 josebuvi Desarrollo para verificacion de retencion ramos de vida
         BEGIN 
@@ -199,11 +200,12 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
      VALUES(ivaNmExpediente, ivaNmPagoAutorizacion, 'Pendiente', v_xml.getClobval(), lvaErrorLog);
 
       ELSE
-		IF NVL(lvaUsaApiGeeSiniCxP, 'N') = 'S' THEN
-          lobjCaus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(lobjPago);
-          PCK_INTEGRATION_CPI.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjCaus, 'TATR_ASYNC_TX_1');
-        ELSE
-      	  PCK_SBK_SURABROKER.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjPago);
+        lvaUsaApiGeeSiniCxP := PCK_PARAMETROS.FN_GET_PARAMETROV2(lvaCdRamo, '%', 'USA_API_SINICXP', SYSDATE, '*', '*', '*', '*', '*');
+        IF NVL(lvaUsaApiGeeSiniCxP, 'N') = 'S' THEN
+              lobjCaus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(lobjPago);
+              PCK_INTEGRATION_CPI.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjCaus, 'TATR_ASYNC_TX_1');
+            ELSE
+              PCK_SBK_SURABROKER.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjPago);
         END IF;
     END IF;
 
@@ -369,8 +371,8 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
      /*
      - Modificado por: Sergio Garcia 2016/03/28
      - Asunto: Llamar al nuevo adaptador que se encarga de enviar la 
-     -         información de PDN a SINFO
-     - Proyecto: [Rediseño Cierre de Seguros]
+     -         informaciï¿½n de PDN a SINFO
+     - Proyecto: [Rediseï¿½o Cierre de Seguros]
      */
      
      BEGIN
@@ -383,7 +385,7 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
            ovaMensajeTecnico:=lvaMensajeTecnicoExt;
            ovaMensajeUsuario:=lvaMensajeUsuarioExt;
      END;
-     --Fin modificación Sergio Garcia.     
+     --Fin modificaciï¿½n Sergio Garcia.     
      
      
      
@@ -452,8 +454,8 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
      /*
      - Modificado por: Sergio Garcia 2016/03/28
      - Asunto: Llamar al nuevo adaptador que se encarga de enviar la 
-     -         información de PDN a SINFO
-     - Proyecto: [Rediseño Cierre de Seguros]
+     -         informaciï¿½n de PDN a SINFO
+     - Proyecto: [Rediseï¿½o Cierre de Seguros]
      */
 
      BEGIN
@@ -466,7 +468,7 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
            ovaMensajeTecnico:=lvaMensajeTecnicoExt;
            ovaMensajeUsuario:=lvaMensajeUsuarioExt;
      END;
-     --Fin modificación Sergio Garcia.
+     --Fin modificaciï¿½n Sergio Garcia.
      
   EXCEPTION
       WHEN lexErrorProcedimientoExt THEN
@@ -533,8 +535,8 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
      /*
      - Modificado por: Sergio Garcia 2016/03/28
      - Asunto: Llamar al nuevo adaptador que se encarga de enviar la 
-     -         información de PDN a SINFO
-     - Proyecto: [Rediseño Cierre de Seguros]
+     -         informaciï¿½n de PDN a SINFO
+     - Proyecto: [Rediseï¿½o Cierre de Seguros]
      */
      
      BEGIN
@@ -547,7 +549,7 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
            ovaMensajeTecnico:=lvaMensajeTecnicoExt;
            ovaMensajeUsuario:=lvaMensajeUsuarioExt;
      END;
-     --Fin modificación Sergio Garcia. 
+     --Fin modificaciï¿½n Sergio Garcia. 
           
   EXCEPTION
       WHEN lexErrorProcedimientoExt THEN
