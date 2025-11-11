@@ -24,6 +24,8 @@ declare
    l_datos_conv     obj_sap_datos_conversion;
    l_obj_cxp        obj_sap_cxp_siniestros;
    l_obj_caus       OBJ_CPI_CAUSACION_CONTABLE;
+   lObjCxp          OBJ_SAP_CXP_SINIESTROS;
+   lObjCaus         OBJ_CPI_CAUSACION_CONTABLE;
    lvaCdRamo        VARCHAR2(10); -- Ajustar según corresponda
    lvaUsaApiGeeSiniCxP VARCHAR2(10);
 begin
@@ -204,11 +206,12 @@ begin
      -- Solo ejecutar el nuevo flujo vía API (CPI)
      lObjCxp := treat(l_siniestro as OBJ_SAP_CXP_SINIESTROS);
      lObjCaus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(lObjCxp); --convierte el objeto sap a causacion contable
-     PCK_INTEGRATION_CPI.SP_EJECUTAR_SERVICIO_ASINCRONO(lObjCaus, 'TATR_ASYNC_TX_1'); --convierte la causacion en JSON y guarda en la tabla
+     PCK_CPI_INTEGRATION.SP_EJECUTAR_SERVICIO_ASINCRONO(lObjCaus, 'TATR_ASYNC_TX_1'); --convierte la causacion en JSON y guarda en la tabla
      --dbms_output.put_line('Flujo API ejecutado (CPI).');
   ELSE
+      null;
      -- Ejecutar el flujo tradicional (SuraBroker)
-     PCK_SBK_CORE.SP_EJECUTAR_SERVICIO_ASINCRONO(l_siniestro);
+     --PCK_SBK_CORE.SP_EJECUTAR_SERVICIO_ASINCRONO(l_siniestro);
      --dbms_output.put_line('Flujo tradicional ejecutado (SuraBroker).');
   END IF;
 

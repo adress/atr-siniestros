@@ -355,7 +355,7 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_CPI_INTEGRATION IS
     v_json_obj JSON_OBJECT_T;
   BEGIN
     v_json_obj := CAUSACION_TO_JSON_OBJ(p_obj);
-    RETURN CONVERT(v_json_obj.to_clob(), 'AL32UTF8');
+    RETURN v_json_obj.to_clob();--CONVERT(v_json_obj.to_clob(), 'AL32UTF8');
   END CAUSACION_TO_JSON;
 
   PROCEDURE SP_EJECUTAR_SERVICIO_ASINCRONO(
@@ -367,7 +367,8 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_CPI_INTEGRATION IS
   BEGIN
     -- Serializar a JSON completo usando JSON_OBJECT_T/JSON_ARRAY_T
     l_json_clob := CAUSACION_TO_JSON(ityMensaje);
-
+    DBMS_OUTPUT.PUT_LINE('  - Mensaje | JSON: ' || l_json_clob);
+    
     -- Enviar el JSON usando el paquete utilitario
     v_response := PCK_GNL_INTEGRATION_UTILS.FN_GNL_CALL_ASYNC(l_json_clob, iTablaDestino);
     DBMS_OUTPUT.PUT_LINE('  - Mensaje: ' || v_response.message);
