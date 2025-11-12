@@ -66,10 +66,11 @@ create or replace package body OPS$PROCEDIM.pck_sin_adaptador_cpi is
           where cdproceso = 'ART_SINI';
       exception
          when no_data_found then
+            dbms_output.put_line('ERROR: No se encontraron credenciales para el proceso ART_SINI en la tabla tcob_parametros_sap');
             v_key := null;
             v_secret := null;
       end;
-
+      
     -- HEADERS
       v_header := obj_cpi_headers(
          request_id              => v_correlation_id,
@@ -78,15 +79,15 @@ create or replace package body OPS$PROCEDIM.pck_sin_adaptador_cpi is
          target_system_process   => 'siniestros_cxp',
          source_application_name => 'atr',
          integration_method      => 'bd-async',
-         key                     => v_key,
-         secret                  => v_secret,
-         correlation_id          => v_correlation_id
+         key                     => '57W1hRyXRLSiswMg9RSL6DOGymReG9paAKY33CkGBltwBGMz',
+         secret                  => 'gAAAAABo1avf8BCP-W3xacUJPQXwJ9tE9Fqb7i3ifloNOQSxkz-94Yi1Kn77g0FgeWc8Ev30UpwTi4eHZqo_1OKRV8i9xHE2mMT9RzVoWBpmIz8zuPQFKh4qsL6jf5Xasqf72gcyn7_i1yNDD7k2LotUCQzkCPmZbTFgU34YjhY2jxjMkr_M_o4=',
+         correlation_id          => pck_gnl_integration_utils.fn_gnl_get_correlation_id()
       );
 
     -- CONTROL
       v_control := obj_cpi_causa_control(
          sistemaorigen => 'ATRSINIEST',
-         identificador => i_obj.cabecera.nmordenpago
+         identificador => pck_gnl_integration_utils.fn_gnl_get_correlation_id() 
       );
       
       -- CABECERA: determinacionContable, datosGenerales, parametrosAdicionales
