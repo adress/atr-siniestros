@@ -109,7 +109,7 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_CPI_INTEGRATION IS
 
     -- CONTROL
     v_control_obj := JSON_OBJECT_T();
-    v_control_obj.put('sistemaOrigen', 'ATRSINIEST'); --NVL(p_obj.control.sistemaOrigen, '')
+    v_control_obj.put('sistemaOrigen', NVL(p_obj.control.sistemaOrigen, ''));
     v_control_obj.put('identificador', NVL(p_obj.control.identificador, ''));
 
     -- CABECERA
