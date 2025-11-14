@@ -69,7 +69,7 @@ COMMENT ON COLUMN OPS$PROCEDIM.TATR_ASYNC_TX_1.CDREQUEST_ID IS 'Identificador de
 COMMENT ON COLUMN OPS$PROCEDIM.TATR_ASYNC_TX_1.DSTARGET_SYSTEM IS 'Nombre del sistema destino al que se envia la transaccion.';
 COMMENT ON COLUMN OPS$PROCEDIM.TATR_ASYNC_TX_1.DSTARGET_SYSTEM_PROCESS IS 'Nombre del proceso especifico en el sistema destino.';
 COMMENT ON COLUMN OPS$PROCEDIM.TATR_ASYNC_TX_1.DSSOURCE_APPLICATION_NAME IS 'Nombre de la aplicacion fuente que origina la transaccion.';
-COMMENT ON COLUMN OPS$PROCEDIM.TATR_ASYNC_TX_1.SNIS_BATCH_OPERATION IS 'Indicador numerico que señala si la transaccion es parte de un proceso por lotes (1) o individual (0).';
+COMMENT ON COLUMN OPS$PROCEDIM.TATR_ASYNC_TX_1.SNIS_BATCH_OPERATION IS 'Indicador numerico que indica si la transaccion es parte de un proceso por lotes (1) o individual (0).';
 COMMENT ON COLUMN OPS$PROCEDIM.TATR_ASYNC_TX_1.NMSTATUS IS 'Estado numerico de la transaccion (ejemplo: 1=pendiente, 2=en progreso, 3=error, 4=completada).';
 COMMENT ON COLUMN OPS$PROCEDIM.TATR_ASYNC_TX_1.DSREQUEST_CLOB IS 'Datos de la solicitud en formato CLOB, puede contener payloads extensos.';
 COMMENT ON COLUMN OPS$PROCEDIM.TATR_ASYNC_TX_1.FECREATED_AT IS 'Fecha y hora de creacion del registro de transaccion.';
@@ -218,178 +218,21 @@ END TRG_ATR_BEF_INS_TX_HISTORY_1;
 /
 ALTER TRIGGER OPS$PROCEDIM.TRG_ATR_BEF_INS_TX_HISTORY_1 ENABLE;
 
--- ========= PROCEDIMIENTO PARA MOVER REGISTROS A HISTORICO =========
---@review se cambia el nombre demaciado largo de SP_ATR_ASYNC_TX_MOVE_TO_HISTORY_1 a SP_ATR_ASYNC_TX_MOVE_HISTORY_1
-CREATE OR REPLACE PROCEDURE OPS$PROCEDIM.SP_ATR_ASYNC_TX_MOVE_HISTORY_1
-IS
-    v_success_count     NUMBER := 0;
-    v_error_count       NUMBER := 0;
-    v_error_message     VARCHAR2(4000);
-    v_error_count_by_process NUMBER := 0;
-BEGIN
-    -- Cursor para registros completados (STATUS = 4)
-    FOR rec IN (
-        SELECT * FROM OPS$PROCEDIM.TATR_ASYNC_TX_1
-        WHERE FEREQ_COMPLETED_AT IS NOT NULL
-          AND NMSTATUS = 4
-    )
-    LOOP
-        BEGIN
-            INSERT INTO OPS$PROCEDIM.TATR_ASYNC_TX_HISTORY_1 (
-                NMID,
-                CDCORRELATION_ID,
-                CDREQUEST_ID,
-                DSTARGET_SYSTEM,
-                DSTARGET_SYSTEM_PROCESS,
-                DSSOURCE_APPLICATION_NAME,
-                SNIS_BATCH_OPERATION,
-                NMSTATUS,
-                DSREQUEST_CLOB,
-                FECREATED_AT,
-                FEIN_PROGRESS_AT,
-                FEREQ_COMPLETED_AT,
-                FERES_COMPLETED_AT,
-                DSRESPONSE_CLOB,
-                DSMOVE_REASON,
-                FEMOVED_TO_HISTORY_AT
-            ) VALUES (
-                rec.NMID,
-                rec.CDCORRELATION_ID,
-                rec.CDREQUEST_ID,
-                rec.DSTARGET_SYSTEM,
-                rec.DSTARGET_SYSTEM_PROCESS,
-                rec.DSSOURCE_APPLICATION_NAME,
-                rec.SNIS_BATCH_OPERATION,
-                rec.NMSTATUS,
-                rec.DSREQUEST_CLOB,
-                rec.FECREATED_AT,
-                rec.FEIN_PROGRESS_AT,
-                rec.FEREQ_COMPLETED_AT,
-                rec.FERES_COMPLETED_AT,
-                rec.DSRESPONSE_CLOB,
-                'COMPLETED', SYSTIMESTAMP
-            );
 
-            DELETE FROM OPS$PROCEDIM.TATR_ASYNC_TX_1 WHERE NMID = rec.NMID;
-            
-            v_success_count := v_success_count + 1;
-        EXCEPTION
-            WHEN OTHERS THEN
-                v_error_count := v_error_count + 1;
-                v_error_message := 'Error moviendo ID=' || rec.NMID || ': ' || SQLERRM;
-                DBMS_OUTPUT.PUT_LINE(v_error_message);
-        END;
-    END LOOP;
-
-    -- Cursor para registros con mas de 10 errores
-    FOR rec IN (
-        SELECT t.* FROM OPS$PROCEDIM.TATR_ASYNC_TX_1 t
-        WHERE EXISTS (
-            SELECT 1 
-            FROM OPS$PROCEDIM.TATR_ASYNC_TX_ERRORS_1 e
-            WHERE e.NMPROCESS_ID = t.NMID
-            GROUP BY e.NMPROCESS_ID
-            HAVING COUNT(*) > 10
-        )
-    )
-    LOOP
-        BEGIN
-            -- Contar errores para este proceso
-            SELECT COUNT(*)
-            INTO v_error_count_by_process
-            FROM OPS$PROCEDIM.TATR_ASYNC_TX_ERRORS_1
-            WHERE NMPROCESS_ID = rec.NMID;
-
-
-             INSERT INTO OPS$PROCEDIM.TATR_ASYNC_TX_HISTORY_1 (
-                NMID,
-                CDCORRELATION_ID,
-                CDREQUEST_ID,
-                DSTARGET_SYSTEM,
-                DSTARGET_SYSTEM_PROCESS,
-                DSSOURCE_APPLICATION_NAME,
-                SNIS_BATCH_OPERATION,
-                NMSTATUS,
-                DSREQUEST_CLOB,
-                FECREATED_AT,
-                FEIN_PROGRESS_AT,
-                FEREQ_COMPLETED_AT,
-                FERES_COMPLETED_AT,
-                DSRESPONSE_CLOB,
-                DSMOVE_REASON,
-                FEMOVED_TO_HISTORY_AT
-            ) VALUES (
-                rec.NMID,
-                rec.CDCORRELATION_ID,
-                rec.CDREQUEST_ID,
-                rec.DSTARGET_SYSTEM,
-                rec.DSTARGET_SYSTEM_PROCESS,
-                rec.DSSOURCE_APPLICATION_NAME,
-                rec.SNIS_BATCH_OPERATION,
-                rec.NMSTATUS,
-                rec.DSREQUEST_CLOB,
-                rec.FECREATED_AT,
-                rec.FEIN_PROGRESS_AT,
-                rec.FEREQ_COMPLETED_AT,
-                rec.FERES_COMPLETED_AT,
-                rec.DSRESPONSE_CLOB,
-                'MAX_ERRORS', SYSTIMESTAMP
-            );
-
-
-            DELETE FROM OPS$PROCEDIM.TATR_ASYNC_TX_1 WHERE NMID = rec.NMID;
-            
-            v_success_count := v_success_count + 1;
-            
-            DBMS_OUTPUT.PUT_LINE('Movido por exceso de errores - ID: ' || rec.NMID || 
-                               ', Total errores: ' || v_error_count_by_process);
-        EXCEPTION
-            WHEN OTHERS THEN
-                v_error_count := v_error_count + 1;
-                v_error_message := 'Error moviendo por errores ID=' || rec.NMID || ': ' || SQLERRM;
-                DBMS_OUTPUT.PUT_LINE(v_error_message);
-        END;
-    END LOOP;
-
-    COMMIT;
-    DBMS_OUTPUT.PUT_LINE('Proceso completado. Exitos: ' || v_success_count || ', Errores: ' || v_error_count);
-    
-EXCEPTION
-    WHEN OTHERS THEN
-        ROLLBACK;
-        DBMS_OUTPUT.PUT_LINE('Error general en el procedimiento: ' || SQLERRM);
-        RAISE;
-END;
-/
-
--- JOB PARA EJECUTAR EL PROCEDIMIENTO DE MOVIMIENTO A HISTORICO
--- NOTA: Por estandar, la creacion del job debe ejecutarse manualmente o en un script de post-deploy.
--- Ejemplo de bloque a ejecutar aparte:
-
--- BEGIN
---     DBMS_SCHEDULER.CREATE_JOB (
---         job_name        => 'OPS$PROCEDIM.JOB_ATR_ASYNC_TX_MOVE_TO_HISTORY_1',
---         job_type        => 'STORED_PROCEDURE',
---         job_action      => 'OPS$PROCEDIM.SP_ATR_ASYNC_TX_MOVE_HISTORY_1',
---         repeat_interval => 'FREQ=SECONDLY; INTERVAL=5',
---         enabled         => TRUE,
---         comments       => 'Job para mover registros completados a la tabla historica cada minuto'
---     );
--- END;
-
+-- ========= GRANTS DE SEGURIDAD =========
 -- GRANTS DE SEGURIDAD PARA USUARIOS OPS$ADM_ATR, ADM_ATR, OPS$PROCEDIM, OPS$SINI
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_1 TO OPS$ADM_ATR;
-GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_1 TO ADM_ATR;
+GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_1 TO OPS$ADM_ATRSURA;
+GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_1 TO ADM_ATRSURA;
 GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_1 TO OPS$PROCEDIM;
 GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_1 TO OPS$SINI;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_ERRORS_1 TO OPS$ADM_ATR;
-GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_ERRORS_1 TO ADM_ATR;
+GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_ERRORS_1 TO OPS$ADM_ATRSURA;
+GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_ERRORS_1 TO ADM_ATRSURA;
 GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_ERRORS_1 TO OPS$PROCEDIM;
 GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_ERRORS_1 TO OPS$SINI;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_HISTORY_1 TO OPS$ADM_ATR;
-GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_HISTORY_1 TO ADM_ATR;
+GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_HISTORY_1 TO OPS$ADM_ATRSURA;
+GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_HISTORY_1 TO ADM_ATRSURA;
 GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_HISTORY_1 TO OPS$PROCEDIM;
 GRANT SELECT, INSERT, UPDATE, DELETE ON OPS$PROCEDIM.TATR_ASYNC_TX_HISTORY_1 TO OPS$SINI;
