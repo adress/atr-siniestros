@@ -225,15 +225,15 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
         ovaMensajeTecnico:= gvaPackage ||'.'||lvaNombreObjeto ||':' || lpad(to_char(abs(SQLCODE)),7,'0' )||':'||lvaMensajeTecnico;
         ovaMensajeUsuario:= gvaPackage ||'.'||lvaNombreObjeto ||':' || lpad(to_char(abs(SQLCODE)),7,'0' )||':'||lvaMensajeUsuario;
       WHEN OTHERS THEN
-			 --Llamado a Cronos
-       ovaMensajeTecnico:= substr(gvaPackage ||'.'||lvaNombreObjeto ||':' || lpad(to_char(abs(SQLCODE)),7,'0' )||':'||lvaMensajeTecnico,1,255);
-       ovaMensajeUsuario:= substr(SQLERRM,1,255);-- 'TRANSACCION NO DISPONIBLE ' ;
-			 PCKCRO_INTERFAZ_CRONOS.SPCRO_ERROR('SINIESTROS',
-																					'GestorSiniestros',
-																					lpad(to_char(abs(SQLCODE)),7,'0' ),
-																					'SINIESTROS',
-																					SUBSTR(ivaNmExpediente||'-'||ivaNmPagoAutorizacion||'-'||lvaMensajeUsuario,1,255),
-																					lvaMensajeTecnico);
+        ovaMensajeTecnico := gvaPackage || '.' || lvaNombreObjeto || ':' || CHR(13) ||
+                                  'Fecha/Hora: ' || TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') || CHR(13) ||
+                                  'Expediente: ' || ivaNmExpediente || CHR(13) ||
+                                  'SQLCODE: ' || TO_CHAR(SQLCODE) || CHR(13) ||
+                                  'SQLERRM: ' || SQLERRM || CHR(13) ||
+                                  'Error Stack: ' || DBMS_UTILITY.FORMAT_ERROR_STACK || CHR(13) ||
+                                  'Call Stack: ' || DBMS_UTILITY.FORMAT_CALL_STACK || CHR(13) ||
+                                  'Backtrace: ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE;
+        ovaMensajeUsuario := 'Ocurrió un error inesperado. Por favor contacte al administrador';
 
 	END SP_ENVIAR_MENSAJE_CXP;
 
