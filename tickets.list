@@ -1,3 +1,5 @@
 433636 -> 11-11-25 -> ticket para la modificacion de LABPDN_PCK_SIN_GESTOR_SAP
 433766 -> 11-12-25 -> se actualiza el paquete pck_cpi_integration
 433956 -> 13-12-25 -> ticket para la modificacion de LABPDN_PCK_SIN_GESTOR_SAP
+434152 -> 14-11-25 -> gestor sap con log splunk
+434139 -> 14-11-25 -> permisos parcial para el usario adm sobre las tablas

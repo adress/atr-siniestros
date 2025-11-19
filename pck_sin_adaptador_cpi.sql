@@ -65,10 +65,8 @@ create or replace package body OPS$PROCEDIM.pck_sin_adaptador_cpi is
            from tcob_parametros_sap
           where cdproceso = 'ART_SINI';
       exception
-         when no_data_found then
-            dbms_output.put_line('ERROR: No se encontraron credenciales para el proceso ART_SINI en la tabla tcob_parametros_sap');
-            v_key := null;
-            v_secret := null;
+          when no_data_found then
+            raise_application_error(-20001, 'ERROR: No se encontraron credenciales para el proceso ART_SINI en la tabla tcob_parametros_sap');
       end;
       
     -- HEADERS
