@@ -79,7 +79,8 @@ create or replace package body OPS$PROCEDIM.pck_sin_adaptador_cpi is
          integration_method      => 'bd-async',
          key                     => '57W1hRyXRLSiswMg9RSL6DOGymReG9paAKY33CkGBltwBGMz',
          secret                  => 'gAAAAABo1avf8BCP-W3xacUJPQXwJ9tE9Fqb7i3ifloNOQSxkz-94Yi1Kn77g0FgeWc8Ev30UpwTi4eHZqo_1OKRV8i9xHE2mMT9RzVoWBpmIz8zuPQFKh4qsL6jf5Xasqf72gcyn7_i1yNDD7k2LotUCQzkCPmZbTFgU34YjhY2jxjMkr_M_o4=',
-         correlation_id          => pck_gnl_integration_utils.fn_gnl_get_correlation_id()
+         correlation_id          => pck_gnl_integration_utils.fn_gnl_get_correlation_id(),
+         its_batch_operation     => 0
       );
 
     -- CONTROL
