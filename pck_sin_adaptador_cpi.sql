@@ -57,16 +57,22 @@ create or replace package body OPS$PROCEDIM.pck_sin_adaptador_cpi is
    begin
 
       v_correlation_id := pck_gnl_integration_utils.fn_gnl_get_correlation_id();
-
-      -- Obtener key y secret desde tcob_parametros_sap
+      -- Obtener key y secret desde parametros
       begin
-         select cdusuario, cdclave
-           into v_key, v_secret
-           from tcob_parametros_sap
-          where cdproceso = 'ART_SINI';
+          v_key    := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2('%', '%', 'CLIENT_ID_ATR', SYSDATE, '*','*','*','*','*'), '');
+          v_secret := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2('%', '%', 'SECRET_ATR',   SYSDATE, '*','*','*','*','*'), '');
+
+          -- Validar que key y secret no sean nulos o vacios
+          if v_key is null or trim(v_key) is null then
+              raise_application_error(-20001, 'ERROR: El parametro KEY_API_SINICXP esta nulo o vacio');
+          end if;
+          
+          if v_secret is null or trim(v_secret) is null then
+              raise_application_error(-20002, 'ERROR: El parametro SECRET_API_SINICXP esta nulo o vacio');
+          end if;
       exception
-          when no_data_found then
-            raise_application_error(-20001, 'ERROR: No se encontraron credenciales para el proceso ART_SINI en la tabla tcob_parametros_sap');
+          when others then
+              raise_application_error(-20003, 'ERROR obteniendo parametros de seguridad: ' || SQLERRM);
       end;
       
     -- HEADERS
@@ -77,16 +83,16 @@ create or replace package body OPS$PROCEDIM.pck_sin_adaptador_cpi is
          target_system_process   => 'siniestros_cxp',
          source_application_name => 'atr',
          integration_method      => 'bd-async',
-         key                     => '57W1hRyXRLSiswMg9RSL6DOGymReG9paAKY33CkGBltwBGMz',
-         secret                  => 'gAAAAABo1avf8BCP-W3xacUJPQXwJ9tE9Fqb7i3ifloNOQSxkz-94Yi1Kn77g0FgeWc8Ev30UpwTi4eHZqo_1OKRV8i9xHE2mMT9RzVoWBpmIz8zuPQFKh4qsL6jf5Xasqf72gcyn7_i1yNDD7k2LotUCQzkCPmZbTFgU34YjhY2jxjMkr_M_o4=',
-         correlation_id          => pck_gnl_integration_utils.fn_gnl_get_correlation_id(),
+         key                     => v_key,
+         secret                  => v_secret,
+         correlation_id          => v_correlation_id,
          its_batch_operation     => 0
       );
 
     -- CONTROL
       v_control := obj_cpi_causa_control(
          sistemaorigen => 'ATRSINIEST',
-         identificador => pck_gnl_integration_utils.fn_gnl_get_correlation_id() 
+         identificador => pck_gnl_integration_utils.fn_gnl_get_correlation_id()  --i_obj.cabecera.nmordenpago
       );
       
       -- CABECERA: determinacionContable, datosGenerales, parametrosAdicionales
