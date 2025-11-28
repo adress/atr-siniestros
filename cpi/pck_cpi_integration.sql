@@ -207,8 +207,9 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_CPI_INTEGRATION IS
       v_descuento_obj.put('porcentaje01', NVL(p_obj.posiciones(v_idx).resumen.descuento.porcentaje01, ''));
       v_descuento_obj.put('porcentaje02', NVL(p_obj.posiciones(v_idx).resumen.descuento.porcentaje02, ''));
 
-      v_retenciones_array := JSON_ARRAY_T();
-      IF p_obj.posiciones(v_idx).resumen.retenciones.COUNT > 0 THEN
+      -- Solo crear el array de retenciones si hay elementos
+      IF p_obj.posiciones(v_idx).resumen.retenciones IS NOT NULL AND p_obj.posiciones(v_idx).resumen.retenciones.COUNT > 0 THEN
+        v_retenciones_array := JSON_ARRAY_T();
         FOR v_idx_ret IN 1..p_obj.posiciones(v_idx).resumen.retenciones.COUNT LOOP
           DECLARE
             v_ret_obj JSON_OBJECT_T;
@@ -221,6 +222,8 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_CPI_INTEGRATION IS
             v_retenciones_array.append(v_ret_obj);
           END;
         END LOOP;
+      ELSE
+        v_retenciones_array := NULL;
       END IF;
 
       v_general_tercero_obj := JSON_OBJECT_T();
@@ -250,7 +253,10 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_CPI_INTEGRATION IS
       v_resumen_obj.put('parametrosContables', v_param_cont_obj);
       v_resumen_obj.put('datosGenerales', v_datos_gen_pos_obj);
       v_resumen_obj.put('descuento', v_descuento_obj);
-      v_resumen_obj.put('retenciones', v_retenciones_array);
+      -- Solo agregar retenciones si el array no es nulo
+      IF v_retenciones_array IS NOT NULL THEN
+        v_resumen_obj.put('retenciones', v_retenciones_array);
+      END IF;
       v_resumen_obj.put('tercero', v_tercero_obj);
       v_resumen_obj.put('parametrosAdicionales', v_param_adic_pos_array);
 
