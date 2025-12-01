@@ -22,9 +22,16 @@ INSERT INTO T999_PARAMETROS (CDRAMO, CDSUBRAMO, CDCLAVE1, CDCLAVE2, CDCLAVE3, CD
 VALUES ('181', '%', '%', '%', '%', '%', '%', 'USA_API_SINICXP', NULL, SYSDATE, NULL, 'S');
 INSERT INTO T999_PARAMETROS (CDRAMO, CDSUBRAMO, CDCLAVE1, CDCLAVE2, CDCLAVE3, CDCLAVE4, CDCLAVE5, DSPARAMETRO, PTPARAMETRO, FEALTA, FEBAJA, DSVALOR_PARAMETRO)
 VALUES ('BAN', '%', '%', '%', '%', '%', '%', 'USA_API_SINICXP', NULL, SYSDATE, NULL, 'S');
+commit;
 
+-- insert credentials for ATR Siniestros crendciales de laboratorio
+INSERT INTO T999_PARAMETROS (CDRAMO, CDSUBRAMO, CDCLAVE1, CDCLAVE2, CDCLAVE3, CDCLAVE4, CDCLAVE5, DSPARAMETRO, PTPARAMETRO, FEALTA, FEBAJA, DSVALOR_PARAMETRO)
+VALUES ('%', '%', '%', '%', '%', '%', '%', 'CLIENT_ID_ATR', NULL, SYSDATE, NULL, 'UnSead4Nq9KcxpqGvgYAABKOp7sVGtEnqJk5c1sfQ8DQ9UQm');
+INSERT INTO T999_PARAMETROS (CDRAMO, CDSUBRAMO, CDCLAVE1, CDCLAVE2, CDCLAVE3, CDCLAVE4, CDCLAVE5, DSPARAMETRO, PTPARAMETRO, FEALTA, FEBAJA, DSVALOR_PARAMETRO)
+VALUES ('%', '%', '%', '%', '%', '%', '%', 'SECRET_ATR', NULL, SYSDATE, NULL, 'gAAAAABpKiIWKg04wVl5wdMR_G7w4t7DpdkrzG6STwtw_UeTwvd3Ca6mgJr5zebFUy8hvx_f1zjRNxasCun3nskf0U_wAJyz6rYhOI_G9tHhwtU7Q1_JDEcEvbu5Ko5f1cSr2zn_JCdXgk6x0QYza6K1QOSQiQe4QO6_NZQsa3To9eaz9Lzt9xc=');
+commit;
 
--- 2. insert user and password for art siniestros
+-- 2. insert user and password for art siniestros (esto ya no se usa)
 insert into tcob_parametros_sap (
    cdproceso,
    cdconsumidor,

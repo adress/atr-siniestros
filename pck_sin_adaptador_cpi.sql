@@ -64,11 +64,11 @@ create or replace package body OPS$PROCEDIM.pck_sin_adaptador_cpi is
 
           -- Validar que key y secret no sean nulos o vacios
           if v_key is null or trim(v_key) is null then
-              raise_application_error(-20001, 'ERROR: El parametro KEY_API_SINICXP esta nulo o vacio');
+              raise_application_error(-20001, 'ERROR: El parametro CLIENT_ID_ATR esta nulo o vacio');
           end if;
           
           if v_secret is null or trim(v_secret) is null then
-              raise_application_error(-20002, 'ERROR: El parametro SECRET_API_SINICXP esta nulo o vacio');
+              raise_application_error(-20002, 'ERROR: El parametro SECRET_ATR esta nulo o vacio');
           end if;
       exception
           when others then
