@@ -151,15 +151,15 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_ADAPTADOR_CPI is
             v_retenciones(v_retenciones.last) := obj_cpi_causa_pos_retencion(
                tipoRetencion         => 
                   case 
-                     when v_ret.cdIndicadorRetencion = 'R' then v_ret.cdTipoRetencion || '_RF'
-                     when v_ret.cdIndicadorRetencion = 'I' then v_ret.cdTipoRetencion || '_RI'
-                     else v_codigo_municipio || v_ret.cdTipoRetencion  || '_RC'
+                     when v_ret.cdIndicadorRetencion = 'R' then i_obj.cabecera.cdcompania || v_ret.cdTipoRetencion || '_RF'
+                     when v_ret.cdIndicadorRetencion = 'I' then i_obj.cabecera.cdcompania || v_ret.cdTipoRetencion || '_RI'
+                     else i_obj.cabecera.cdcompania || v_codigo_municipio || v_ret.cdTipoRetencion  || '_RC'
                   end,
                indicadorRetencion    => 
                   case 
-                     when v_ret.cdIndicadorRetencion = 'R' then v_ret.cdTipoRetencion || '_RF'
-                     when v_ret.cdIndicadorRetencion = 'I' then v_ret.cdTipoRetencion || '_RI'
-                     else v_codigo_municipio || v_ret.cdTipoRetencion  || '_RC'
+                     when v_ret.cdIndicadorRetencion = 'R' then i_obj.cabecera.cdcompania || v_ret.cdTipoRetencion || '_RF'
+                     when v_ret.cdIndicadorRetencion = 'I' then i_obj.cabecera.cdcompania || v_ret.cdTipoRetencion || '_RI'
+                     else i_obj.cabecera.cdcompania || v_codigo_municipio || v_ret.cdTipoRetencion  || '_RC'
                   end,
                valorBaseRetencion    => to_char(v_ret.ptBaseRetencion),
                valorRetencion        => to_char(v_ret.ptRetencion)
