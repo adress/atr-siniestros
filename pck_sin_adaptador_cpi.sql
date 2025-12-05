@@ -12,22 +12,29 @@
 
     Cambios:
       - 2025-09-17: Cabecera anadida.
+      - 2025-12-05: Ajustes para Siniestros de global.
     ============================================================================
 */
-
-create or replace package OPS$PROCEDIM.pck_sin_adaptador_cpi is
+CREATE OR REPLACE PACKAGE OPS$PROCEDIM.PCK_SIN_ADAPTADOR_CPI is
   -- Mapea un objeto OBJ_SAP_CXP_SINIESTROS a OBJ_CPI_CAUSACION_CONTABLE
    function map_sap_cxp_to_causacion (
-      i_obj in obj_sap_cxp_siniestros
+      i_obj                     IN obj_sap_cxp_siniestros,
+      p_param_client_id         IN  VARCHAR2,
+      p_param_client_secret     IN  VARCHAR2,
+      p_sistema_origen          IN  VARCHAR2,
+      p_source_application_name IN  VARCHAR2
    ) return obj_cpi_causacion_contable;
 end pck_sin_adaptador_cpi;
 /
 
-
-create or replace package body OPS$PROCEDIM.pck_sin_adaptador_cpi is
+CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_ADAPTADOR_CPI is
 
    function map_sap_cxp_to_causacion (
-      i_obj in obj_sap_cxp_siniestros
+      i_obj                     IN obj_sap_cxp_siniestros,
+      p_param_client_id         IN  VARCHAR2,
+      p_param_client_secret     IN  VARCHAR2,
+      p_sistema_origen          IN  VARCHAR2,
+      p_source_application_name IN  VARCHAR2
    ) return obj_cpi_causacion_contable is
       v_header            obj_cpi_headers;
       v_control           obj_cpi_causa_control;
@@ -59,29 +66,29 @@ create or replace package body OPS$PROCEDIM.pck_sin_adaptador_cpi is
       v_correlation_id := pck_gnl_integration_utils.fn_gnl_get_correlation_id();
       -- Obtener key y secret desde parametros
       begin
-          v_key    := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2('%', '%', 'CLIENT_ID_ATR', SYSDATE, '*','*','*','*','*'), '');
-          v_secret := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2('%', '%', 'SECRET_ATR',   SYSDATE, '*','*','*','*','*'), '');
+          v_key    := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2('%', '%', p_param_client_id, SYSDATE, '*','*','*','*','*'), '');
+          v_secret := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2('%', '%', p_param_client_secret,   SYSDATE, '*','*','*','*','*'), '');
 
           -- Validar que key y secret no sean nulos o vacios
           if v_key is null or trim(v_key) is null then
-              raise_application_error(-20001, 'ERROR: El parametro CLIENT_ID_ATR esta nulo o vacio');
+              raise_application_error(-20001, 'ERROR: El parametro CLIENT_ID esta nulo o vacio');
           end if;
-          
+
           if v_secret is null or trim(v_secret) is null then
-              raise_application_error(-20002, 'ERROR: El parametro SECRET_ATR esta nulo o vacio');
+              raise_application_error(-20002, 'ERROR: El parametro SECRET esta nulo o vacio');
           end if;
       exception
           when others then
               raise_application_error(-20003, 'ERROR obteniendo parametros de seguridad: ' || SQLERRM);
       end;
-      
+
     -- HEADERS
       v_header := obj_cpi_headers(
          request_id              => v_correlation_id,
          ref_src_1               => 'ref-001',
          target_system           => 'sap',
          target_system_process   => 'siniestros_cxp',
-         source_application_name => 'atr',
+         source_application_name => p_source_application_name,
          integration_method      => 'bd-async',
          key                     => v_key,
          secret                  => v_secret,
@@ -91,10 +98,10 @@ create or replace package body OPS$PROCEDIM.pck_sin_adaptador_cpi is
 
     -- CONTROL
       v_control := obj_cpi_causa_control(
-         sistemaorigen => 'ATRSINIEST',
+         sistemaorigen => p_sistema_origen,
          identificador => pck_gnl_integration_utils.fn_gnl_get_correlation_id()  --i_obj.cabecera.nmordenpago
       );
-      
+
       -- CABECERA: determinacionContable, datosGenerales, parametrosAdicionales
       v_cabecera := obj_cpi_causa_cabecera(
          determinacioncontable => obj_cpi_causa_det_contable(
