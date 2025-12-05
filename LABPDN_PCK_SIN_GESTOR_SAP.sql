@@ -158,8 +158,20 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
       FROM T999_PARAMETROS P
      WHERE P.DSPARAMETRO = 'PAGO_SURABROKER';
 
-  lvaUsaApiGeeSiniCxP         VARCHAR2(10);
-  lobjCaus                    OBJ_CPI_CAUSACION_CONTABLE := NULL; 
+  lvaUsaApiGeeSiniCxP   VARCHAR2(10);
+  lobjCaus              OBJ_CPI_CAUSACION_CONTABLE := NULL; 
+
+  -- =====================================================================
+  --  Estructura de la variable lvaHeadersEstatico
+  --  Descripcion de los valores:
+  --    1. param_client_id         ? Nombre del parametro para obtener el client_id de la tabla de parametros.
+  --    2. param_client_secret     ? Nombre del parametro para obtener el client_secret de la tabla de parametros.
+  --    3. sistema_origen          ? Nombre definido por sap para la aplicacion origen.EXISTS
+  --    4. source-application-name ? Prefijo identificador de la aplicacion origen que genera la solicitud.
+  -- =====================================================================
+  lvaHeadersEstaticoGlo VARCHAR2(1000) := 'CLIENT_ID_GLO,SECRET_GLO,GLOBALWEB,glo';
+  lvaHeadersEstaticoAtr VARCHAR2(1000) := 'CLIENT_ID_ATR,SECRET_ATR,ATRSINIEST,atr';
+  lvaValorReserva       VARCHAR(4) := '';
 
 	BEGIN
         -- 22/11/2024 josebuvi Desarrollo para verificacion de retencion ramos de vida
@@ -201,21 +213,62 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
      INSERT INTO TSIN_CONTABILIZAR_PAGOSAP (NMEXPEDIENTE, NMORDENPAGO, DSESTADO, DSMENSAJE, DSLOG)
      VALUES(ivaNmExpediente, ivaNmPagoAutorizacion, 'Pendiente', v_xml.getClobval(), lvaErrorLog);
 
-      ELSE
-        lvaUsaApiGeeSiniCxP := PCK_PARAMETROS.FN_GET_PARAMETROV2(lvaCdRamo, '%', 'USA_API_SINICXP', SYSDATE, '*', '*', '*', '*', '*');
-        IF NVL(lvaUsaApiGeeSiniCxP, 'N') = 'S' THEN
-              lobjCaus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(lobjPago);
-              PCK_CPI_INTEGRATION.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjCaus, 'TATR_ASYNC_TX_1');
-            ELSE
-              PCK_SBK_SURABROKER.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjPago);
+    ELSE
+      -- Parametro que indica si se usa el camino Apigee o SuraBroker de acuerdo al ramo.
+      lvaUsaApiGeeSiniCxP := PCK_PARAMETROS.FN_GET_PARAMETROV2(lvaCdRamo, '%', 'USA_API_SINICXP', SYSDATE, '*', '*', '*', '*', '*');
+
+      -- ========================= SWITCH DE INTEGRACION ======================
+      IF NVL(lvaUsaApiGeeSiniCxP, 'N') = 'S' THEN
+        --------------------------------------------------------
+        -- LOGICA DE INTEGRACION VIA APIGEE (Nuevo Canal)
+        --------------------------------------------------------
+        -- Obtener el valor de la reserva para determinar si es salud (global web) o vida (atr)
+        BEGIN 
+            SELECT NUMERO_RESERVA
+              INTO lvaValorReserva
+              FROM SIN_PAGOS_DET
+            WHERE EXPEDIENTE = ivaNmExpediente
+              AND NUMERO_PAGO_AUTORIZACION = ivaNmPagoAutorizacion;
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                lvaValorReserva   := NULL;
+                ovaMensajeTecnico := 'No se encontro reserva para el pago ' || ivaNmPagoAutorizacion || ' del expediente ' || ivaNmExpediente;
+                ovaMensajeUsuario := 'No se encontro reserva para el pago ' || ivaNmPagoAutorizacion || ' del expediente ' || ivaNmExpediente;
+        END;
+
+        IF lvaValorReserva = 'PSUSALUD' THEN
+          lobjCaus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(
+              lobjPago,
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoGlo,'[^,]+',1,1), ''),
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoGlo,'[^,]+',1,2), ''),
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoGlo,'[^,]+',1,3), ''),
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoGlo,'[^,]+',1,4), '')
+          );
+          PCK_CPI_INTEGRATION_V2.SP_ENVIAR_DOCUMENTO_ASYNC(lobjCaus, OBJ_CPI_JSON_CAUSACION_STRATEGY(1), 'TGLO_ASYNC_TX_1'); 
+        ELSE
+          lobjCaus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(
+              lobjPago,
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoAtr,'[^,]+',1,1), ''),
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoAtr,'[^,]+',1,2), ''),
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoAtr,'[^,]+',1,3), ''),
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoAtr,'[^,]+',1,4), '')
+          );
+          PCK_CPI_INTEGRATION_V2.SP_ENVIAR_DOCUMENTO_ASYNC(lobjCaus, OBJ_CPI_JSON_CAUSACION_STRATEGY(1), 'TATR_ASYNC_TX_1');
         END IF;
+      ELSE
+        --------------------------------------------------------
+        -- LOGICA DE INTEGRACION VIA SURABROKER
+        --------------------------------------------------------
+        PCK_SBK_SURABROKER.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjPago);
+      END IF;
+      -- ======================= FIN SWITCH DE INTEGRACION ====================
+
     END IF;
 
      UPDATE SIN_PAGOS_DET
      SET CDENSAP = 'S'
      WHERE EXPEDIENTE             = ivaNmExpediente
      AND NUMERO_PAGO_AUTORIZACION = ivaNmPagoAutorizacion;
-
 
   EXCEPTION
       WHEN lexErrorProcedimientoExt THEN
@@ -233,7 +286,7 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
                                   'Error Stack: ' || DBMS_UTILITY.FORMAT_ERROR_STACK || CHR(13) ||
                                   'Call Stack: ' || DBMS_UTILITY.FORMAT_CALL_STACK || CHR(13) ||
                                   'Backtrace: ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE;
-        ovaMensajeUsuario := 'Ocurrió un error inesperado. Por favor contacte al administrador';
+        ovaMensajeUsuario := 'Ocurri?? error inesperado. Por favor contacte al administrador';
 
 	END SP_ENVIAR_MENSAJE_CXP;
 
@@ -441,7 +494,7 @@ BEGIN
                            'Call Stack: ' || DBMS_UTILITY.FORMAT_CALL_STACK || CHR(13) ||
                            'Backtrace: ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE;
 
-ovaMensajeUsuario := 'OcurriÃ³ un error inesperado. Por favor contacte al administrador';
+ovaMensajeUsuario := 'Ocurri? un error inesperado. Por favor contacte al administrador';
 	END SP_CONSULTAR_EST_CXP;
 ------------------------------------------------------------------------------------------------------------------------
 
