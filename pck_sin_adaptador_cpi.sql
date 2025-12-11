@@ -311,7 +311,7 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_ADAPTADOR_CPI is
                      clasecuenta       => 'S',                                  
                      sociedad          => '',                                    
                      valor             => to_char(v_detalle_cxp.ptImporte),
-                     indicadorimpuesto => v_detalle_cxp.cdIndicadorImpuesto,
+                     indicadorimpuesto => i_obj.cabecera.cdcompania || v_detalle_cxp.cdIndicadorImpuesto,
                      oficina           => i_obj.cabecera.cdcompania || v_doc.detalleSiniestros(v_doc.detalleSiniestros.first).cdoficinaradicacion,
                      centrocostos      => i_obj.cabecera.cdcompania || v_doc.detalleSiniestros(v_doc.detalleSiniestros.first).cdoficinaradicacion,
                      indicadorbloqueo  => null,
