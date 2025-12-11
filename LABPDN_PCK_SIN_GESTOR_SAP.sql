@@ -171,7 +171,7 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
   -- =====================================================================
   lvaHeadersEstaticoGlo VARCHAR2(1000) := 'CLIENT_ID_GLO,SECRET_GLO,GLOBALWEB,glo';
   lvaHeadersEstaticoAtr VARCHAR2(1000) := 'CLIENT_ID_ATR,SECRET_ATR,ATRSINIEST,atr';
-  lvaValorReserva       VARCHAR(4) := '';
+  lvaValorReserva       VARCHAR(9) := '';
 
 	BEGIN
         -- 22/11/2024 josebuvi Desarrollo para verificacion de retencion ramos de vida
