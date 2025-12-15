@@ -122,7 +122,7 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_ADAPTADOR_CPI is
             clavereferencia2 => i_obj.documentoscxp(i_obj.documentoscxp.first)
                                  .detalleSiniestros(i_obj.documentoscxp(i_obj.documentoscxp.first)
                                  .detalleSiniestros.first).cdramo,
-            texto            => i_obj.cabecera.nmfactura,
+            texto            => NVL(i_obj.cabecera.nmfactura, 'REGISTRO SINIESTRO SEGURO'), --si no tiene factura, esta en blanco enviar "REGISTRO SINIESTRO SEGURO"
             tipocambio       => '',
             fechatipocambio  => ''
          ),
@@ -239,10 +239,10 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_ADAPTADOR_CPI is
                indicadorbloqueo  => v_doc.cdbloqueopago,
                viapago           => v_doc.cdviapago,
                fechainicio       => to_char(v_doc.detalleSiniestros(v_doc.detalleSiniestros.first).feaviso, 'YYYY-MM-DD'),
-               clavereferencia1  => v_doc.nmpoliza,         --numero de identificacion fiscal del tercero enviar nmIdentificacion del tercero
+               clavereferencia1  => i_obj.tercero.informacionfiscal.nmidentificacion,         --numero de identificacion fiscal del tercero enviar nmIdentificacion del tercero
                clavereferencia2  => v_doc.cdramo,           
                clavereferencia3  => '',                     -- Enviar vacio
-               asignacion        => null,                   -- #Enviar nmIdentificacion del tercero
+               asignacion        => i_obj.tercero.informacionfiscal.nmidentificacion,                   -- #Enviar nmIdentificacion del tercero
                texto             => v_doc.detalleSiniestros(v_doc.detalleSiniestros.first).dsTextoPosicion, -- dsTextoPosicion del primer detalle
                contrato          => '',                     
                lineadenegocio    => v_doc.cdramo,          
@@ -317,10 +317,10 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_ADAPTADOR_CPI is
                      indicadorbloqueo  => null,
                      viapago           => null,
                      fechainicio       => to_char(v_detalle_cxp.feAviso, 'YYYY-MM-DD'),
-                     clavereferencia1  => v_detalle_cxp.nmPoliza,
+                     clavereferencia1  => i_obj.tercero.informacionfiscal.nmidentificacion, --NUMERO IDENTIFICACION TERCERO
                      clavereferencia2  => v_detalle_cxp.cdRamo,
                      clavereferencia3  => v_detalle_cxp.cdIntermediario,
-                     asignacion        => null,
+                     asignacion        => i_obj.tercero.informacionfiscal.nmidentificacion, --NUMERO IDENTIFICACION TERCERO
                      texto             => v_detalle_cxp.dsTextoPosicion,
                      contrato          => null,
                      lineadenegocio    => null,
