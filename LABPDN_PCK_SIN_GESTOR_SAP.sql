@@ -228,7 +228,8 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
               INTO lvaValorReserva
               FROM SIN_PAGOS_DET
             WHERE EXPEDIENTE = ivaNmExpediente
-              AND NUMERO_PAGO_AUTORIZACION = ivaNmPagoAutorizacion;
+              AND NUMERO_PAGO_AUTORIZACION = ivaNmPagoAutorizacion
+              AND ROWNUM = 1; --@reviw Marcela Carmona
         EXCEPTION
             WHEN NO_DATA_FOUND THEN
                 lvaValorReserva   := NULL;
