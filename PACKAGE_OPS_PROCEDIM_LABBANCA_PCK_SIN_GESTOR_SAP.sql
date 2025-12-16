@@ -1,5 +1,5 @@
 
-  CREATE OR REPLACE EDITIONABLE PACKAGE "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" IS
+  CREATE OR REPLACE PACKAGE OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
 
   gvaPackage             VARCHAR2(30):= 'PCK_SIN_GESTOR_SAP';
 
@@ -67,17 +67,17 @@
 \**-----------------------------------------------------------------------------------------
   Procedure que entrega los valores calculados para poblar el modelo de Impuestos y enviar a SAP
   #author Juan Guillermo Henao Montoya
-  Fecha Creación: 2013/07/06
-  Fecha Modificación:
-  Motivo Modificación:
+  Fecha CreaciÃ³n: 2013/07/06
+  Fecha ModificaciÃ³n:
+  Motivo ModificaciÃ³n:
 
-  #param ivaCdSociedad           Código de la compañía sobre la cual se calcula el impuesto
-  #param ivaDniBenePago          Documento Nacional de Identificación del beneficiario de pago
+  #param ivaCdSociedad           CÃ³digo de la compaÃ±Ã­a sobre la cual se calcula el impuesto
+  #param ivaDniBenePago          Documento Nacional de IdentificaciÃ³n del beneficiario de pago
   #param inuPtImporte            Valor bruto de la orden de pago
   #param inuPtDeducible          Valor del deducible a descontarle al asegurado
-  #param ivaCdMoneda             Código de la moneda sobre la cual se hace el pago
+  #param ivaCdMoneda             CÃ³digo de la moneda sobre la cual se hace el pago
   #param inuPoIVA                porcentaje de IVA calculado
-  #param ivaCdCodigoRetencion    Código de la retención a aplicar.  #param ivaCdIndicadorRetencion Tipo de retencion a Calcular R Retefiemte, I ReteIVA, 
+  #param ivaCdCodigoRetencion    CÃ³digo de la retenciÃ³n a aplicar.  #param ivaCdIndicadorRetencion Tipo de retencion a Calcular R Retefiemte, I ReteIVA, 
   #param ovaMensajeTecnico       Mensaje tecnico en caso de error
   #param ovaMensajeUsuario       Mensaje para el usuario en caso de error
   *\
@@ -129,7 +129,7 @@
 */
 END PCK_SIN_GESTOR_SAP;
 /
-CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" IS
+CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
 
 	PROCEDURE SP_ENVIAR_MENSAJE_CXP(ivaNmExpediente        IN SIN_PAGOS_DET.EXPEDIENTE%TYPE,
 																	ivaNmPagoAutorizacion  IN SIN_PAGOS_DET.NUMERO_PAGO_AUTORIZACION%TYPE,
@@ -216,7 +216,7 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
                                   'Error Stack: ' || DBMS_UTILITY.FORMAT_ERROR_STACK || CHR(13) ||
                                   'Call Stack: ' || DBMS_UTILITY.FORMAT_CALL_STACK || CHR(13) ||
                                   'Backtrace: ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE;
-        ovaMensajeUsuario := 'Ocurrió error inesperado. Por favor contacte al administrador';
+        ovaMensajeUsuario := 'OcurriÃ³ error inesperado. Por favor contacte al administrador';
 
 	END SP_ENVIAR_MENSAJE_CXP;
 
@@ -293,7 +293,7 @@ BEGIN
 		 END IF;
 
   ---------------------------------------------------------------------------
-  -- Leo switch On/Off desde tu función
+  -- Leo switch On/Off desde tu funciÃ³n
   ---------------------------------------------------------------------------
   v_cnuevo := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','USA_API_CONCXP',SYSDATE,'*','*','*','*','*'),'N');
 
@@ -357,24 +357,24 @@ BEGIN
           END IF;
         END IF;
 
-        -- === Decisiï¿½n de fallback tï¿½cnico/estructural por prefijos del paquete ===
+        -- === DecisiÃ³n de fallback tÃ©cnico/estructural por prefijos del paquete ===
         IF v_a_msj_tec IS NOT NULL THEN
           IF    UPPER(v_a_msj_tec) LIKE 'HEADER:%'
              OR UPPER(v_a_msj_tec) LIKE 'SYNC:%'
              OR UPPER(v_a_msj_tec) LIKE 'UNEXPECTED:%'
              OR UPPER(v_a_msj_tec) LIKE 'RESPONSE:%' THEN
-            lbEjecutarLegado := TRUE;   -- fallo tï¿½cnico/estructural => fallback
+            lbEjecutarLegado := TRUE;   -- fallo tÃ©cnico/estructural => fallback
           ELSE
             lbEjecutarLegado := FALSE;  -- mensaje de negocio => nos quedamos
           END IF;
         ELSE
-          lbEjecutarLegado := FALSE;    -- OK tï¿½cnico
+          lbEjecutarLegado := FALSE;    -- OK tÃ©cnico
         END IF;
       END;
 
     EXCEPTION
       WHEN OTHERS THEN
-        -- Excepciï¿½n tï¿½cnica (timeout, HTTP no 2xx, etc.) => fallback legado
+        -- ExcepciÃ³n tÃ©cnica (timeout, HTTP no 2xx, etc.) => fallback legado
         ovaMensajeTecnico := f255('Apigee: ' || SQLERRM);
         ovaMensajeUsuario := f255('Apigee: ' || SQLERRM);
         lbEjecutarLegado  := TRUE;
@@ -424,7 +424,7 @@ BEGIN
                            'Call Stack: ' || DBMS_UTILITY.FORMAT_CALL_STACK || CHR(13) ||
                            'Backtrace: ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE;
 
-        ovaMensajeUsuario := 'Ocurrió un error inesperado. Por favor contacte al administrador';
+        ovaMensajeUsuario := 'OcurriÃ³ un error inesperado. Por favor contacte al administrador';
 
 	END SP_CONSULTAR_EST_CXP;
 ------------------------------------------------------------------------------------------------------------------------
@@ -475,8 +475,8 @@ BEGIN
      /*
      - Modificado por: Sergio Garcia 2016/03/28
      - Asunto: Llamar al nuevo adaptador que se encarga de enviar la 
-     -         información de PDN a SINFO
-     - Proyecto: [Rediseño Cierre de Seguros]
+     -         informaciÃ³n de PDN a SINFO
+     - Proyecto: [RediseÃ±o Cierre de Seguros]
      */
      
      BEGIN
@@ -489,7 +489,7 @@ BEGIN
            ovaMensajeTecnico:=lvaMensajeTecnicoExt;
            ovaMensajeUsuario:=lvaMensajeUsuarioExt;
      END;
-     --Fin modificación Sergio Garcia.     
+     --Fin modificaciÃ³n Sergio Garcia.     
      
      
      
@@ -558,8 +558,8 @@ BEGIN
      /*
      - Modificado por: Sergio Garcia 2016/03/28
      - Asunto: Llamar al nuevo adaptador que se encarga de enviar la 
-     -         información de PDN a SINFO
-     - Proyecto: [Rediseño Cierre de Seguros]
+     -         informaciÃ³n de PDN a SINFO
+     - Proyecto: [RediseÃ±o Cierre de Seguros]
      */
 
      BEGIN
@@ -572,7 +572,7 @@ BEGIN
            ovaMensajeTecnico:=lvaMensajeTecnicoExt;
            ovaMensajeUsuario:=lvaMensajeUsuarioExt;
      END;
-     --Fin modificación Sergio Garcia.
+     --Fin modificaciÃ³n Sergio Garcia.
      
   EXCEPTION
       WHEN lexErrorProcedimientoExt THEN
@@ -639,8 +639,8 @@ BEGIN
      /*
      - Modificado por: Sergio Garcia 2016/03/28
      - Asunto: Llamar al nuevo adaptador que se encarga de enviar la 
-     -         información de PDN a SINFO
-     - Proyecto: [Rediseño Cierre de Seguros]
+     -         informaciÃ³n de PDN a SINFO
+     - Proyecto: [RediseÃ±o Cierre de Seguros]
      */
      
      BEGIN
@@ -653,7 +653,7 @@ BEGIN
            ovaMensajeTecnico:=lvaMensajeTecnicoExt;
            ovaMensajeUsuario:=lvaMensajeUsuarioExt;
      END;
-     --Fin modificación Sergio Garcia. 
+     --Fin modificaciÃ³n Sergio Garcia. 
           
   EXCEPTION
       WHEN lexErrorProcedimientoExt THEN
