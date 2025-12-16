@@ -39,10 +39,9 @@ commit;
 --    OPS$PROCEDIM.TATR_ASYNC_TX_ERRORS_1
 --    OPS$PROCEDIM.TATR_ASYNC_TX_HISTORY_1
 
--- 2. creacion de los types de consulta obj_cpi_causacion_contable.sql
+-- 2. creacion de los paquetes utilitarios cpy y general con types de consulta obj_cpi_causacion_contable.sql
 
 -- 4. create adapter using the file pck_sin_adaptador_cpi.sql
 --  pck_sin_adaptador_cpi
-
 
 --5. add permissions to tables, types and packages to MAPEOINFO, OPS$ADM_ATRSURA, ADM_ATRSURA, OPS$SINI
