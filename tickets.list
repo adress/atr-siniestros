@@ -4,11 +4,12 @@ Laboratorio
 433956  -> 13-12-25 -> ticket para la modificacion de LABPDN_PCK_SIN_GESTOR_SAP
 434152  -> 14-11-25 -> gestor sap con log splunk
 434139  -> 14-11-25 -> permisos parcial para el usario adm sobre las tablas
-6840    -> mejoras adaptador
-7222    -> crear tablas en banca
-7224    -> creacion de types de causacion contable banca (no pasar, quedo con error)
-6877    -> creacion de paquetes utilitarios cpi y gnl
-6878    -> adaptador y permisos
+CRQ000000006840    -> mejoras adaptador
+CRQ000000007222    -> crear tablas en banca
+CRQ000000007224    -> creacion de types de causacion contable banca (no pasar, quedo con error)
+CRQ000000006877    -> creacion de paquetes utilitarios cpi y gnl en banca
+CRQ000000006878    -> adaptador y permisos (no pasar, esta incompleto)
+CRQ000000007401    -> Paquetes y permisos banca (incluye modificación de la integración)
 
 
 
@@ -19,5 +20,5 @@ Laboratorio
 
 
 Produccion 
-6833 -> creacion de las tablas
-6842 -> creacion de las tablas de GLO
+CRQ000000006833 -> creacion de las tablas
+CRQ000000006842 -> creacion de las tablas de GLO
