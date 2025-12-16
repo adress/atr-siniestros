@@ -16,10 +16,10 @@
 
   /*
     * Procedimiento: SP_GENERAR_JSON_HEADER_FENIX_APIGEE
-    * Descripci?n  : Genera el JSON de header para integracion APIGEE.
-    *               Obtiene el access_token v?a OAuth2 usando usuario/clave de TCOB_PARAMETROS_SAP,
+    * Descripción  : Genera el JSON de header para integración APIGEE.
+    *               Obtiene el access_token vía OAuth2 usando usuario/clave de TCOB_PARAMETROS_SAP,
     *               y lo coloca en el header "token".
-    *               Adem?s, obtiene la URL de destino (DSNAME_SPACE) y la URL de OAuth (DSNAME_CREDENTIALS)
+    *               Además, obtiene la URL de destino (DSNAME_SPACE) y la URL de OAuth (DSNAME_CREDENTIALS)
     *               desde la tabla y las incluye en el header como "url-destino" y "oauth-url".
   */
   PROCEDURE SP_GENERAR_JSON_HEADER_FENIX_APIGEE (
@@ -38,7 +38,7 @@
 
   /*
     * Procedimiento: SP_GENERAR_JSON_BODY_FENIX_APIGEE
-    * Descripci?n  : Genera el JSON de body de consultas para integracion via APIGEE
+    * Descripción  : Genera el JSON de body de consultas para integración via APIGEE
   */
   PROCEDURE SP_GENERAR_JSON_BODY_FENIX_APIGEE (
     ivaSistemaOrigen          IN  VARCHAR2,
@@ -52,7 +52,7 @@
 
   /*
     * Procedimiento: SP_LLAMAR_GNL_CALL_SYNC_FENIX_APIGEE
-    * Descripci?n  : Llama a FN_GNL_CALL_SYNC usando los headers (en CLOB), el token recibido,
+    * Descripción  : Llama a FN_GNL_CALL_SYNC usando los headers (en CLOB), el token recibido,
     *                y el body. La URL de destino se obtiene del campo "url-destino" del header.
     *                Actualiza el campo "token" en los headers antes de la llamada.
   */
