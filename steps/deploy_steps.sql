@@ -34,11 +34,12 @@ commit;
 --*  CREATE objects (using analizador de requerimientos)   *
 --**********************************************************
 
---3. create tables use file script_tablas_estandar.sql:
+--1. create tables use file script_tablas_estandar.sql:
 --    OPS$PROCEDIM.TATR_ASYNC_TX_1
 --    OPS$PROCEDIM.TATR_ASYNC_TX_ERRORS_1
 --    OPS$PROCEDIM.TATR_ASYNC_TX_HISTORY_1
 
+-- 2. creacion de los types de consulta obj_cpi_causacion_contable.sql
 
 -- 4. create adapter using the file pck_sin_adaptador_cpi.sql
 --  pck_sin_adaptador_cpi

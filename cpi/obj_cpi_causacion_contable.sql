@@ -29,7 +29,8 @@ CREATE OR REPLACE TYPE OPS$PROCEDIM.OBJ_CPI_HEADERS AS OBJECT (
   integration_method VARCHAR2(100),
   key VARCHAR2(4000),
   secret VARCHAR2(4000),
-  correlation_id VARCHAR2(200)
+  correlation_id VARCHAR2(200),
+  its_batch_operation number(1)
 );
 /
 
