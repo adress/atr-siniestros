@@ -1,5 +1,5 @@
 
-  CREATE OR REPLACE EDITIONABLE PACKAGE "OPS$PROCEDIM"."PCK_SAP_APIGEE_CONSULTA" AS
+  CREATE OR REPLACE PACKAGE OPS$PROCEDIM.PCK_SAP_APIGEE_CONSULTA AS
   /*
     ********************************************************************************************
     * ESPECIFICACIÓN DEL PAQUETE (PCK_SAP_APIGEE_CONSULTA)
@@ -70,7 +70,7 @@
 
 END PCK_SAP_APIGEE_CONSULTA;
 /
-CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SAP_APIGEE_CONSULTA" AS
+CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SAP_APIGEE_CONSULTA AS
 
   ----------------------------------------------------------------------------
   -- Helpers locales
