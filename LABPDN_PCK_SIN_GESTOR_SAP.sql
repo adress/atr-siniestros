@@ -171,7 +171,7 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
   -- =====================================================================
   lvaHeadersEstaticoGlo VARCHAR2(1000) := 'CLIENT_ID_GLO,SECRET_GLO,GLOBALWEB,glo';
   lvaHeadersEstaticoAtr VARCHAR2(1000) := 'CLIENT_ID_ATR,SECRET_ATR,ATRSINIEST,atr';
-  lvaValorReserva       VARCHAR(9) := '';
+  lvaRamosSinCxpSalud   VARCHAR2(1000);
 
 	BEGIN
         -- 22/11/2024 josebuvi Desarrollo para verificacion de retencion ramos de vida
@@ -219,25 +219,16 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_GESTOR_SAP IS
 
       -- ========================= SWITCH DE INTEGRACION ======================
       IF NVL(lvaUsaApiGeeSiniCxP, 'N') = 'S' THEN
+
+        -- Obtener listado de ramos de salud (global web)
+        lvaRamosSinCxpSalud := PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','RAMOS_SIN_SAL',SYSDATE,'*','*','*','*','*'); 
+
         --------------------------------------------------------
         -- LOGICA DE INTEGRACION VIA APIGEE (Nuevo Canal)
         --------------------------------------------------------
-        -- Obtener el valor de la reserva para determinar si es salud (global web) o vida (atr)
-        BEGIN 
-            SELECT NUMERO_RESERVA
-              INTO lvaValorReserva
-              FROM SIN_PAGOS_DET
-            WHERE EXPEDIENTE = ivaNmExpediente
-              AND NUMERO_PAGO_AUTORIZACION = ivaNmPagoAutorizacion
-              AND ROWNUM = 1; --@reviw Marcela Carmona
-        EXCEPTION
-            WHEN NO_DATA_FOUND THEN
-                lvaValorReserva   := NULL;
-                ovaMensajeTecnico := 'No se encontro reserva para el pago ' || ivaNmPagoAutorizacion || ' del expediente ' || ivaNmExpediente;
-                ovaMensajeUsuario := 'No se encontro reserva para el pago ' || ivaNmPagoAutorizacion || ' del expediente ' || ivaNmExpediente;
-        END;
 
-        IF lvaValorReserva = 'PSUSALUD' THEN
+        -- Validar si es salud (global web) o vida (atr)
+        IF INSTR(UPPER(lvaRamosSinCxpSalud),UPPER(lvaCdRamo)) > 0 THEN
           lobjCaus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(
               lobjPago,
               NVL(REGEXP_SUBSTR(lvaHeadersEstaticoGlo,'[^,]+',1,1), ''),
