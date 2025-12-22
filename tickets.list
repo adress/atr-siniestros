@@ -11,6 +11,7 @@ CRQ000000006877    -> creacion de paquetes utilitarios cpi y gnl en banca
 CRQ000000006878    -> adaptador y permisos (no pasar, esta incompleto)
 CRQ000000007401    -> Paquetes y permisos banca (incluye modificación de la integración)
 CRQ000000007419    -> se arregla el bug de multiples respuestas      
+CRQ000000007701    -> fix siniestros de gloabal web
 
 
 
