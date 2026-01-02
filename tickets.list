@@ -1,18 +1,20 @@
 Laboratorio
-433636  -> 11-11-25 -> ticket para la modificacion de LABPDN_PCK_SIN_GESTOR_SAP
-433766  -> 11-12-25 -> se actualiza el paquete pck_cpi_integration
-433956  -> 13-12-25 -> ticket para la modificacion de LABPDN_PCK_SIN_GESTOR_SAP
-434152  -> 14-11-25 -> gestor sap con log splunk
-434139  -> 14-11-25 -> permisos parcial para el usario adm sobre las tablas
-CRQ000000006840    -> mejoras adaptador
-CRQ000000007222    -> crear tablas en banca
-CRQ000000007224    -> creacion de types de causacion contable banca (no pasar, quedo con error)
-CRQ000000006877    -> creacion de paquetes utilitarios cpi y gnl en banca
-CRQ000000006878    -> adaptador y permisos (no pasar, esta incompleto)
-CRQ000000007401    -> Paquetes y permisos banca (incluye modificación de la integración)
-CRQ000000007419    -> se arregla el bug de multiples respuestas      
-CRQ000000007701    -> fix siniestros de gloabal web
-
+433636  -> 11-11-25 -> [PDN] ticket para la modificacion de LABPDN_PCK_SIN_GESTOR_SAP
+433766  -> 11-12-25 -> [PDN] se actualiza el paquete pck_cpi_integration
+433956  -> 13-12-25 -> [PDN] ticket para la modificacion de LABPDN_PCK_SIN_GESTOR_SAP
+434152  -> 14-11-25 -> [PDN] gestor sap con log splunk
+434139  -> 14-11-25 -> [PDN] permisos parcial para el usario adm sobre las tablas
+CRQ000000006840     -> [PDN] mejoras adaptador
+CRQ000000007222     -> [BANCA] crear tablas en banca
+CRQ000000007224     -> [BANCA] creacion de types de causacion contable banca (no pasar, quedo con error)
+CRQ000000006877     -> [BANCA] creacion de paquetes utilitarios cpi y gnl en banca
+CRQ000000006878     -> [BANCA] adaptador y permisos (no pasar, esta incompleto)
+CRQ000000007401     -> [BANCA] Paquetes y permisos banca (incluye modificación de la integración)
+CRQ000000007419     -> [GLOBAL] se arregla el bug de multiples respuestas      
+CRQ000000007701     -> [GLOBAL] fix siniestros de gloabal web
+CRQ000000007751     -> [BANCA] LABPDN_PCK_SIN_GESTOR_SAP - recompilacion (error)
+CRQ000000008311     -> [BANCA] obj_cpi_json_causacion_strategy - se agregan campos faltantes
+CRQ000000007751     -> [BANCA] LABPDN_PCK_SIN_GESTOR_SAP - recompilacion
 
 
 
@@ -22,5 +24,5 @@ CRQ000000007701    -> fix siniestros de gloabal web
 
 
 Produccion 
-CRQ000000006833 -> creacion de las tablas
-CRQ000000006842 -> creacion de las tablas de GLO
+CRQ000000006833 -> [PDN] creacion de las tablas
+CRQ000000006842 -> creacion de las tablas de GLO para la aplicacionde globalweb
