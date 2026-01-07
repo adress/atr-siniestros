@@ -239,7 +239,28 @@ END f_to_number_sap;
     ------------------------------------------------------------------------
     -- 2) HEADER
     ------------------------------------------------------------------------
-    PCK_SAP_APIGEE_CONSULTA.SP_GENERAR_JSON_HEADER_FENIX_APIGEE(
+
+    --@ivan si lo vas a cosnultar desde una tabla usa este bloque
+      -- BEGIN
+      --     SELECT CDUSUARIO, CDCLAVE, DSNAME_SPACE, DSPUERTO
+      --       INTO v_usuario, v_clave, v_url_destino, v_oauth_url
+      --       FROM TCOB_PARAMETROS_SAP
+      --     WHERE CDSERVICIO = ivaTargetSystem
+      --       AND CDPROCESO = ivaSourceApplicationName;
+      -- EXCEPTION
+      --     WHEN NO_DATA_FOUND THEN
+      --         ovaMensajeTecnico := 'No se encontraron credenciales/URLs para los parámetros proporcionados.';
+      --         ovaMensajeUsuario := 'No se encontraron credenciales/URLs para la integración solicitada.';
+      --         RETURN;
+      --     WHEN OTHERS THEN
+      --         ovaMensajeTecnico := 'Error inesperado al obtener credenciales/URLs: ' || SQLERRM;
+      --         ovaMensajeUsuario := 'Ocurrió un error al obtener credenciales/URLs.';
+      --         RETURN;
+      -- END;
+
+
+
+    PCK_SAP_APIGEE_CONSULTA_V2.SP_GENERAR_JSON_HEADER_FENIX_APIGEE(
       ivaTargetSystem           => 'sap',
       ivaTargetSystemProcess    => 'consultasdoc_cxp',
       ivaSourceApplicationName  => 'ATR',
@@ -247,7 +268,10 @@ END f_to_number_sap;
       ivaCorrelationId          => NULL,
       ivaIsBatchOperation       => 'false',
       ivaRefSrc1                => 'REF-001',
-      ivaOauthUrl               => NULL,
+      ivaOauthUrl               => 'https://apiinternal.labsura.com/oauth/v1/clientcredential/accesstoken?grant_type=client_credentials',
+      ivaOauthClientId          => 'UnSead4Nq9KcxpqGvgYAABKOp7sVGtEnqJk5c1sfQ8DQ9UQm',
+      ivaOauthClientSecret      => 'aXk5TGFETk5EejFEdDBsSHlDMGJHVTZ0cVFKbVhzQTQwVlhCb05Bbnh2dkNxcHJ6RnlkWnFFMVFJNDVmMkFaVw==',
+      ivaOauthSecretIsBase64    => 'S',
       ocaJsonHeader             => v_json_header,
       ovaMensajeTecnico         => v_msj_th,
       ovaMensajeUsuario         => v_msj_uh
@@ -298,13 +322,15 @@ END f_to_number_sap;
     ------------------------------------------------------------------------
     -- 4) LLAMADA S?NCRONA
     ------------------------------------------------------------------------
-    PCK_SAP_APIGEE_CONSULTA.SP_LLAMAR_GNL_CALL_SYNC_FENIX_APIGEE(
+    --
+    PCK_SAP_APIGEE_CONSULTA_V2.SP_LLAMAR_GNL_CALL_SYNC_FENIX_APIGEE(
       ivaMetodo         => 'POST',
       ivaHeaders        => v_json_header,
       ivaToken          => v_token,
       ivaBody           => v_json_body,
       ivaTimeout        => 30,
       ivaWalletPath     => NULL,
+      ivaUrlDestino     => 'https://apiinternal.labsura.com/sap/v1/contabilizacion/consulta',
       ocaRespuesta      => v_resp_sync,
       ovaMensajeTecnico => v_msj_ts,
       ovaMensajeUsuario => v_msj_us

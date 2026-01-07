@@ -15,6 +15,7 @@ CRQ000000007701     -> [GLOBAL] fix siniestros de gloabal web
 CRQ000000007751     -> [BANCA] LABPDN_PCK_SIN_GESTOR_SAP - recompilacion (error)
 CRQ000000008311     -> [BANCA] obj_cpi_json_causacion_strategy - se agregan campos faltantes
 CRQ000000007751     -> [BANCA] LABPDN_PCK_SIN_GESTOR_SAP - recompilacion
+CRQ000000008340     -> [BANCA] se manda a complilar le paquete de consultas v2 para eliminar dependencias de tablas
 
 
 
