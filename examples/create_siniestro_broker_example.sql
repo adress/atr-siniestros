@@ -174,8 +174,10 @@ begin
 
     --- Cast explícito y envio a la cola asincrona
    l_obj_cxp := treat(l_siniestro as OBJ_SAP_CXP_SINIESTROS);
-   l_obj_caus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(l_obj_cxp); --convierte el objeto sap a causacion contable
-   PCK_CPI_INTEGRATION.SP_EJECUTAR_SERVICIO_ASINCRONO(l_obj_caus, 'TATR_ASYNC_TX_1'); --convierte la causacion en JSON y guarda en la tabla
+   l_obj_caus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(l_obj_cxp, 'CLIENT_ID_ATR', 'SECRET_ATR', 'ATRSINIEST', 'atr'); --convierte el objeto sap a causacion contable
+   PCK_CPI_INTEGRATION_V2.SP_ENVIAR_DOCUMENTO_ASYNC(l_obj_caus, OBJ_CPI_JSON_CAUSACION_STRATEGY(1),'TATR_ASYNC_TX_1', 'SEQ_ATR_ASYNC_TX_NMID_1'); --convierte la causacion en JSON y guarda en la tabla
+
+   --PCK_CPI_INTEGRATION.SP_EJECUTAR_SERVICIO_ASINCRONO(l_obj_caus, 'TATR_ASYNC_TX_1'); --convierte la causacion en JSON y guarda en la tabla
 
    --dbms_output.put_line('Siniestro (ejemplo broker) enviado a la cola asíncrona.');
 end;

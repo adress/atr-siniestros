@@ -1,5 +1,5 @@
 
-  CREATE OR REPLACE  PACKAGE OPS$PROCEDIM.PCK_CXP_CONSULTA_EST_ATR AS
+  CREATE OR REPLACE EDITIONABLE PACKAGE "OPS$PROCEDIM"."PCK_CXP_CONSULTA_EST_ATR" AS
   PROCEDURE PR_CONSULTAR_ESTADO(
     i_cdCompania            IN  VARCHAR2,
     i_dsNitAcreedor         IN  VARCHAR2,
@@ -17,7 +17,7 @@
   );
 END PCK_CXP_CONSULTA_EST_ATR;
 /
-CREATE OR REPLACE  PACKAGE BODY OPS$PROCEDIM.PCK_CXP_CONSULTA_EST_ATR AS
+CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_CXP_CONSULTA_EST_ATR" AS
   c_len_msg CONSTANT PLS_INTEGER := 255;
 
   ---------------------------------------------------------------------------
@@ -98,24 +98,28 @@ CREATE OR REPLACE  PACKAGE BODY OPS$PROCEDIM.PCK_CXP_CONSULTA_EST_ATR AS
     WHEN OTHERS THEN
       RETURN NULL;
   END f_parse_yyyymmdd;
+FUNCTION f_to_number_sap(p IN VARCHAR2) RETURN NUMBER IS
+  s VARCHAR2(2000);
+BEGIN
+  s := TRIM(p);
+  s := REPLACE(s, ',', '.');
+  IF s IS NULL THEN
+    RETURN NULL;
+  END IF;
 
-  FUNCTION f_to_number_sap(p IN VARCHAR2) RETURN NUMBER IS
-    s VARCHAR2(2000);
-  BEGIN
-    s := REPLACE(TRIM(p), ',', '.');
-    IF s IS NULL THEN
-      RETURN NULL;
-    END IF;
-
-    RETURN TO_NUMBER(
-             s,
-             'FM9999999999990D9999999MI',   -- acepta signo al final (ej. 40000.0-)
-             'NLS_NUMERIC_CHARACTERS=''.,'''
-           );
-  EXCEPTION
-    WHEN OTHERS THEN
-      RETURN NULL;
-  END f_to_number_sap;
+  IF REGEXP_LIKE(s, '[+-]$') THEN
+    RETURN TO_NUMBER(s,
+                     'FM9999999999990D9999999MI',
+                     'NLS_NUMERIC_CHARACTERS=''.,''');
+  ELSE
+    RETURN TO_NUMBER(s,
+                     'FM9999999999990D9999999',
+                     'NLS_NUMERIC_CHARACTERS=''.,''');
+  END IF;
+EXCEPTION
+  WHEN OTHERS THEN
+    RETURN NULL;
+END f_to_number_sap;
 
   ---------------------------------------------------------------------------
   -- Utilitario peque?o para escapar valores JSON (por si entra " o \)
@@ -192,13 +196,15 @@ CREATE OR REPLACE  PACKAGE BODY OPS$PROCEDIM.PCK_CXP_CONSULTA_EST_ATR AS
     o_msj_tecnico := NULL;
     o_msj_usuario := NULL;
 
+   -- Default: si no llega estado ni documentos, devolver N
+    o_estado := 'N';
     ------------------------------------------------------------------------
     -- 1) SELECCI?N (se arma igual que en el legado)
     ------------------------------------------------------------------------
     IF v_cd_comp IS NOT NULL THEN
       l_sel := l_sel || l_sep
                || '{"filtro":"BUKRS","indicador":"D","opciones":[{"Sign":"I","Option":"EQ","Low":"'
-               || jesc(LPAD(v_cd_comp, 4, '0'))
+               || jesc(v_cd_comp)
                || '","High":""}]}';
       l_sep := ',';
     END IF;
@@ -266,8 +272,8 @@ CREATE OR REPLACE  PACKAGE BODY OPS$PROCEDIM.PCK_CXP_CONSULTA_EST_ATR AS
     END;
     IF v_token IS NULL OR TRIM(v_token) IS NULL THEN
       o_estado      := 'Error';
-      o_msj_tecnico := 'HEADER: access_token vac?o o ausente';
-      o_msj_usuario := 'No se obtuvo token de autenticaci?n.';
+      o_msj_tecnico := 'HEADER: access_token vacio o ausente';
+      o_msj_usuario := 'No se obtuvo token de autenticacion.';
       RETURN;
     END IF;
 
@@ -306,7 +312,7 @@ CREATE OR REPLACE  PACKAGE BODY OPS$PROCEDIM.PCK_CXP_CONSULTA_EST_ATR AS
     IF v_msj_ts IS NOT NULL THEN
       o_estado      := 'Error';
       o_msj_tecnico := SUBSTR('SYNC: '||v_msj_ts,1,c_len_msg);
-      o_msj_usuario := SUBSTR(NVL(v_msj_us,'Error en llamada s?ncrona'),1,c_len_msg);
+      o_msj_usuario := SUBSTR(NVL(v_msj_us,'Error en llamada sincrona'),1,c_len_msg);
       RETURN;
     END IF;
 
@@ -424,10 +430,11 @@ CREATE OR REPLACE  PACKAGE BODY OPS$PROCEDIM.PCK_CXP_CONSULTA_EST_ATR AS
 
           o_msj_tecnico := NULL;
           o_msj_usuario := NULL;
-        ELSE
-          o_estado      := 'Error';
-          o_msj_tecnico := 'RESPONSE: No se encontraron posiciones en documentos[0]';
-          o_msj_usuario := 'No se encontraron posiciones para el documento consultado.';
+         ELSE
+          -- Sin posiciones/documentos: devolver N sin marcar error
+          o_estado      := 'N';
+          o_msj_tecnico := NULL;
+          o_msj_usuario := NULL;
           RETURN;
         END IF;
       END;
