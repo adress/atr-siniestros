@@ -1,0 +1,5 @@
+#Ignore temp folder
+temp/
+
+#Ignore worksheet_temp.sql
+worksheet_temp.sql
