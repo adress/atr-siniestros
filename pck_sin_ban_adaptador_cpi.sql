@@ -180,16 +180,30 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_BAN_ADAPTADOR_CPI is
                tipoidentificacion => '',  --enviar vacio
                identificacion     => ''   --enviar vacio
             ),
-            datosbancarios        => obj_cpi_causa_pos_tercero_bancario(
-               paisbanco          => i_obj.tercero.cuentabancaria.cdpaisbanco,
-               banco              => i_obj.tercero.cuentabancaria.cdbanco,
-               cuenta             => i_obj.tercero.cuentabancaria.nmcuenta,
-               tipocuenta         => i_obj.tercero.cuentabancaria.cdtipocuenta, -- (01 Cuenta corriente, 02 Cuenta de ahorros, 03 TC, 04 Libro mayor)
-               tipoidentificacion => i_obj.tercero.informacionfiscal.cdtipoidentificacion,
-               identificacion     => i_obj.tercero.informacionfiscal.nmidentificacion,
-               nombretitular      => i_obj.tercero.cuentabancaria.dsTitular,
-               apuntadorcuenta    => '' -- enviar vacio
-            ),
+            datosbancarios        => CASE
+               WHEN v_doc.cdviapago = 'CA' THEN 
+                  obj_cpi_causa_pos_tercero_bancario(
+                     paisbanco          => '',
+                     banco              => '',
+                     cuenta             => '',
+                     tipocuenta         => '',
+                     tipoidentificacion => '',
+                     identificacion     => '',
+                     nombretitular      => '',
+                     apuntadorcuenta    => ''
+                  )
+               ELSE 
+                  obj_cpi_causa_pos_tercero_bancario(
+                     paisbanco          => i_obj.tercero.cuentabancaria.cdpaisbanco,
+                     banco              => i_obj.tercero.cuentabancaria.cdbanco,
+                     cuenta             => i_obj.tercero.cuentabancaria.nmcuenta,
+                     tipocuenta         => i_obj.tercero.cuentabancaria.cdtipocuenta,
+                     tipoidentificacion => i_obj.tercero.informacionfiscal.cdtipoidentificacion,
+                     identificacion     => i_obj.tercero.informacionfiscal.nmidentificacion,
+                     nombretitular      => i_obj.tercero.cuentabancaria.dsTitular,
+                     apuntadorcuenta    => ''
+                  )
+            END,
             determinacionbancaria => obj_cpi_causa_pos_tercero_det_bancaria(
                tipoidentificacion => i_obj.tercero.informacionfiscal.cdtipoidentificacion,
                identificacion     => i_obj.tercero.informacionfiscal.nmidentificacion,
