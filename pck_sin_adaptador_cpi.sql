@@ -93,7 +93,7 @@ CREATE OR REPLACE PACKAGE BODY OPS$PROCEDIM.PCK_SIN_ADAPTADOR_CPI is
          key                     => v_key,
          secret                  => v_secret,
          correlation_id          => v_correlation_id,
-         its_batch_operation     => 0
+         is_batch_operation      => 0
       );
 
     -- CONTROL
