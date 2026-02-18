@@ -67,17 +67,17 @@
 \**-----------------------------------------------------------------------------------------
   Procedure que entrega los valores calculados para poblar el modelo de Impuestos y enviar a SAP
   #author Juan Guillermo Henao Montoya
-  Fecha Creaci¿n: 2013/07/06
-  Fecha Modificaci¿n:
-  Motivo Modificaci¿n:
+  Fecha Creaci?n: 2013/07/06
+  Fecha Modificaci?n:
+  Motivo Modificaci?n:
 
-  #param ivaCdSociedad           C¿digo de la compa¿¿a sobre la cual se calcula el impuesto
-  #param ivaDniBenePago          Documento Nacional de Identificaci¿n del beneficiario de pago
+  #param ivaCdSociedad           C?digo de la compa??a sobre la cual se calcula el impuesto
+  #param ivaDniBenePago          Documento Nacional de Identificaci?n del beneficiario de pago
   #param inuPtImporte            Valor bruto de la orden de pago
   #param inuPtDeducible          Valor del deducible a descontarle al asegurado
-  #param ivaCdMoneda             C¿digo de la moneda sobre la cual se hace el pago
+  #param ivaCdMoneda             C?digo de la moneda sobre la cual se hace el pago
   #param inuPoIVA                porcentaje de IVA calculado
-  #param ivaCdCodigoRetencion    C¿digo de la retenci¿n a aplicar.  #param ivaCdIndicadorRetencion Tipo de retencion a Calcular R Retefiemte, I ReteIVA, 
+  #param ivaCdCodigoRetencion    C?digo de la retenci?n a aplicar.  #param ivaCdIndicadorRetencion Tipo de retencion a Calcular R Retefiemte, I ReteIVA, 
   #param ovaMensajeTecnico       Mensaje tecnico en caso de error
   #param ovaMensajeUsuario       Mensaje para el usuario en caso de error
   *\
@@ -158,6 +158,21 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
       FROM T999_PARAMETROS P
      WHERE P.DSPARAMETRO = 'PAGO_SURABROKER';
 
+  lvaUsaApiGeeSiniCxP   VARCHAR2(10);
+  lobjCaus              OBJ_CPI_CAUSACION_CONTABLE := NULL; 
+
+  -- =====================================================================
+  --  Estructura de la variable lvaHeadersEstatico
+  --  Descripcion de los valores:
+  --    1. param_client_id         ? Nombre del parametro para obtener el client_id de la tabla de parametros.
+  --    2. param_client_secret     ? Nombre del parametro para obtener el client_secret de la tabla de parametros.
+  --    3. sistema_origen          ? Nombre definido por sap para la aplicacion origen.EXISTS
+  --    4. source-application-name ? Prefijo identificador de la aplicacion origen que genera la solicitud.
+  -- =====================================================================
+  lvaHeadersEstaticoGlo VARCHAR2(1000) := 'CLIENT_ID_GLO,SECRET_GLO,GLOBALWEB,glo';
+  lvaHeadersEstaticoAtr VARCHAR2(1000) := 'CLIENT_ID_ATR,SECRET_ATR,ATRSINIEST,atr';
+  lvaRamosSinCxpSalud   VARCHAR2(1000);
+
 	BEGIN
         -- 22/11/2024 josebuvi Desarrollo para verificacion de retencion ramos de vida
         BEGIN 
@@ -198,15 +213,54 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
      INSERT INTO TSIN_CONTABILIZAR_PAGOSAP (NMEXPEDIENTE, NMORDENPAGO, DSESTADO, DSMENSAJE, DSLOG)
      VALUES(ivaNmExpediente, ivaNmPagoAutorizacion, 'Pendiente', v_xml.getClobval(), lvaErrorLog);
 
+    ELSE
+      -- Parametro que indica si se usa el camino Apigee o SuraBroker de acuerdo al ramo.
+      lvaUsaApiGeeSiniCxP := PCK_PARAMETROS.FN_GET_PARAMETROV2(lvaCdRamo, '%', 'USA_API_SINICXP', SYSDATE, '*', '*', '*', '*', '*');
+
+      -- ========================= SWITCH DE INTEGRACION ======================
+      IF NVL(lvaUsaApiGeeSiniCxP, 'N') = 'S' THEN
+
+        -- Obtener listado de ramos de salud (global web)
+        lvaRamosSinCxpSalud := PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','RAMOS_SIN_SAL',SYSDATE,'*','*','*','*','*'); 
+
+        --------------------------------------------------------
+        -- LOGICA DE INTEGRACION VIA APIGEE (Nuevo Canal)
+        --------------------------------------------------------
+
+        -- Validar si es salud (global web) o vida (atr)
+        IF INSTR(UPPER(lvaRamosSinCxpSalud),UPPER(lvaCdRamo)) > 0 THEN
+          lobjCaus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(
+              lobjPago,
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoGlo,'[^,]+',1,1), ''),
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoGlo,'[^,]+',1,2), ''),
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoGlo,'[^,]+',1,3), ''),
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoGlo,'[^,]+',1,4), '')
+          );
+          PCK_CPI_INTEGRATION_V2.SP_ENVIAR_DOCUMENTO_ASYNC(lobjCaus, OBJ_ATR_CPI_JSON_CAUSACION_STRATEGY(1), 'TGLO_ASYNC_TX_1'); 
+        ELSE
+          lobjCaus := PCK_SIN_ADAPTADOR_CPI.MAP_SAP_CXP_TO_CAUSACION(
+              lobjPago,
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoAtr,'[^,]+',1,1), ''),
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoAtr,'[^,]+',1,2), ''),
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoAtr,'[^,]+',1,3), ''),
+              NVL(REGEXP_SUBSTR(lvaHeadersEstaticoAtr,'[^,]+',1,4), '')
+          );
+          PCK_CPI_INTEGRATION_V2.SP_ENVIAR_DOCUMENTO_ASYNC(lobjCaus, OBJ_ATR_CPI_JSON_CAUSACION_STRATEGY(1), 'TATR_ASYNC_TX_1');
+        END IF;
       ELSE
-      	  PCK_SBK_SURABROKER.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjPago);
+        --------------------------------------------------------
+        -- LOGICA DE INTEGRACION VIA SURABROKER
+        --------------------------------------------------------
+        PCK_SBK_SURABROKER.SP_EJECUTAR_SERVICIO_ASINCRONO(lobjPago);
+      END IF;
+      -- ======================= FIN SWITCH DE INTEGRACION ====================
+
     END IF;
 
      UPDATE SIN_PAGOS_DET
      SET CDENSAP = 'S'
      WHERE EXPEDIENTE             = ivaNmExpediente
      AND NUMERO_PAGO_AUTORIZACION = ivaNmPagoAutorizacion;
-
 
   EXCEPTION
       WHEN lexErrorProcedimientoExt THEN
@@ -216,66 +270,70 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_GESTOR_SAP" I
         ovaMensajeTecnico:= gvaPackage ||'.'||lvaNombreObjeto ||':' || lpad(to_char(abs(SQLCODE)),7,'0' )||':'||lvaMensajeTecnico;
         ovaMensajeUsuario:= gvaPackage ||'.'||lvaNombreObjeto ||':' || lpad(to_char(abs(SQLCODE)),7,'0' )||':'||lvaMensajeUsuario;
       WHEN OTHERS THEN
-			 --Llamado a Cronos
-       ovaMensajeTecnico:= substr(gvaPackage ||'.'||lvaNombreObjeto ||':' || lpad(to_char(abs(SQLCODE)),7,'0' )||':'||lvaMensajeTecnico,1,255);
-       ovaMensajeUsuario:= substr(SQLERRM,1,255);-- 'TRANSACCION NO DISPONIBLE ' ;
-			 PCKCRO_INTERFAZ_CRONOS.SPCRO_ERROR('SINIESTROS',
-																					'GestorSiniestros',
-																					lpad(to_char(abs(SQLCODE)),7,'0' ),
-																					'SINIESTROS',
-																					SUBSTR(ivaNmExpediente||'-'||ivaNmPagoAutorizacion||'-'||lvaMensajeUsuario,1,255),
-																					lvaMensajeTecnico);
+        ovaMensajeTecnico := gvaPackage || '.' || lvaNombreObjeto || ':' || CHR(13) ||
+                                  'Fecha/Hora: ' || TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') || CHR(13) ||
+                                  'Expediente: ' || ivaNmExpediente || CHR(13) ||
+                                  'SQLCODE: ' || TO_CHAR(SQLCODE) || CHR(13) ||
+                                  'SQLERRM: ' || SQLERRM || CHR(13) ||
+                                  'Error Stack: ' || DBMS_UTILITY.FORMAT_ERROR_STACK || CHR(13) ||
+                                  'Call Stack: ' || DBMS_UTILITY.FORMAT_CALL_STACK || CHR(13) ||
+                                  'Backtrace: ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE;
+        ovaMensajeUsuario := 'Ocurri?? error inesperado. Por favor contacte al administrador';
 
 	END SP_ENVIAR_MENSAJE_CXP;
 
+--------------------------------------
 
-	PROCEDURE SP_CONSULTAR_EST_CXP(ivaClave1         IN VARCHAR2,           -- Para Siniestros es el Expediente
-																 ivaClave2         IN VARCHAR2,    -- Para Todos La Orden de Pago
-																 ivaConsumidor     IN VARCHAR2,
-																 ovaEstado         OUT VARCHAR2,
-																 odaFechaEst       OUT DATE,
-																 onuValor          OUT NUMBER,
-																 ovaUsuario        OUT VARCHAR2,
-																 odaFePosiblePago  OUT DATE,
-																 ovaMensajeTecnico OUT VARCHAR2,
-																 ovaMensajeUsuario OUT VARCHAR2
-																 ) IS
+PROCEDURE SP_CONSULTAR_EST_CXP(
+  ivaClave1         IN VARCHAR2,           -- Para Siniestros es el Expediente
+  ivaClave2         IN VARCHAR2,           -- Para Todos La Orden de Pago
+  ivaConsumidor     IN VARCHAR2,
+  ovaEstado         OUT VARCHAR2,
+  odaFechaEst       OUT DATE,
+  onuValor          OUT NUMBER,
+  ovaUsuario        OUT VARCHAR2,
+  odaFePosiblePago  OUT DATE,
+  ovaMensajeTecnico OUT VARCHAR2,
+  ovaMensajeUsuario OUT VARCHAR2
+) IS
   ---------------------------------------------------------------------------
   -- Aux / errores (legado)
   ---------------------------------------------------------------------------
-  lvaMensajeTecnico           VARCHAR2(255)  := NULL;
-	lvaMensajeTecnicoExt        VARCHAR2(255)  := NULL;
-	lvaMensajeUsuario           VARCHAR2(255)  := NULL;
-	lvaMensajeUsuarioExt        VARCHAR2(255)  := NULL;
-	lexErrorProcedimiento       EXCEPTION;
-	lexErrorProcedimientoExt    EXCEPTION;
-	lvaNombreObjeto             VARCHAR2(30)   :='FN_CONSULTAR_EST_CXP';
+  lvaMensajeTecnico        VARCHAR2(4000) := NULL;
+  lvaMensajeTecnicoExt     VARCHAR2(4000) := NULL;
+  lvaMensajeUsuario        VARCHAR2(4000) := NULL;
+  lvaMensajeUsuarioExt     VARCHAR2(4000) := NULL;
+  lexErrorProcedimiento    EXCEPTION;
+  lexErrorProcedimientoExt EXCEPTION;
+  lvaNombreObjeto          VARCHAR2(30)   := 'FN_CONSULTAR_EST_CXP';
 
-	lvaerror                    VARCHAR2(2000)  := NULL;
-
-  -- Constante para reemplazar gvaPackage histórico
-  --gvaPackage            VARCHAR2(30)   := 'ATR';
+  lvaerror                 VARCHAR2(2000) := NULL;
 
   ---------------------------------------------------------------------------
   -- Objetos mensaje/respuesta (legado)
   ---------------------------------------------------------------------------
-  lobjMensaje                 OBJ_SAP_CONSULTA_EST_CXP := NULL;
-  lobjResultados		          TAB_SBK_ANYDATA;
-  lobjTransaccion	            OBJ_SAP_RESP_CONSULTA_EST_CXP := OBJ_SAP_RESP_CONSULTA_EST_CXP();
-  linStatus			                INTEGER;
+  lobjMensaje      OBJ_SAP_CONSULTA_EST_CXP := NULL;
+  lobjResultados   TAB_SBK_ANYDATA;
+  lobjTransaccion  OBJ_SAP_RESP_CONSULTA_EST_CXP := OBJ_SAP_RESP_CONSULTA_EST_CXP();
+  linStatus        INTEGER;
 
   ---------------------------------------------------------------------------
   -- Control On/Off
   ---------------------------------------------------------------------------
+  v_cnuevo_raw     CHAR(1);
   v_cnuevo         CHAR(1) := 'N';
+  v_cfallback      CHAR(1) := 'S';
   lbEjecutarLegado BOOLEAN := TRUE;
+  lvaCdRamo        SINIESTROS.CDRAMO%TYPE;
+  lvaRamosSinCxpSalud VARCHAR2(1000);
+  lvaSistemaOrigen    VARCHAR2(20);
 
   ---------------------------------------------------------------------------
   -- Helpers
   ---------------------------------------------------------------------------
   FUNCTION f255(p_text IN VARCHAR2) RETURN VARCHAR2 IS
   BEGIN
-    RETURN SUBSTR(p_text, 1, 255);
+    RETURN SUBSTR(p_text, 1, 4000);
   END;
 
 BEGIN
@@ -291,27 +349,64 @@ BEGIN
   ovaMensajeUsuario := NULL;
 
   ---------------------------------------------------------------------------
-  -- Construyo mensaje legacy (intacto) vía Adaptador
+  --- Construyo mensaje legacy (intacto) vía Adaptador
   ---------------------------------------------------------------------------
-	   lvaMensajeTecnico := 'Llamando al Adaptador';
-     lobjMensaje := PCK_SIN_ADAPTADOR_SAP.FN_CREAR_MENSAJE_CONSULTA_CXP(ivaClave1,
-		                                                                    ivaClave2,
-																																				ivaConsumidor,
-																																				lvaMensajeTecnicoExt,
-																																				lvaMensajeUsuarioExt);
+  lvaMensajeTecnico := 'Llamando al Adaptador';
+  lobjMensaje := PCK_SIN_ADAPTADOR_SAP.FN_CREAR_MENSAJE_CONSULTA_CXP(
+                   ivaClave1,
+                   ivaClave2,
+                   ivaConsumidor,
+                   lvaMensajeTecnicoExt, ----NO DATA FOUND
+                   lvaMensajeUsuarioExt);
   IF lvaMensajeTecnicoExt IS NOT NULL OR lvaMensajeUsuarioExt IS NOT NULL THEN
     RAISE lexErrorProcedimientoExt;
   END IF;
 
-  ---------------------------------------------------------------------------
-  -- Leo switch On/Off desde tu función
-  ---------------------------------------------------------------------------
-  v_cnuevo := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','USA_API_CONCXP',SYSDATE,'*','*','*','*','*'),'N');
+  -- Obtener ramo del expediente
+  BEGIN
+    SELECT CDRAMO INTO lvaCdRamo
+      FROM SINIESTROS
+     WHERE EXPEDIENTE = ivaClave1
+       AND ROWNUM = 1;
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      lvaMensajeTecnicoExt := f255('No se encontró ramo para el expediente ' || ivaClave1);
+      lvaMensajeUsuarioExt := f255('No se encontró información de ramo para tu solicitud.');
+      RAISE lexErrorProcedimientoExt;
+  END;
+
+  -- Switch
+  v_cnuevo_raw := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2(
+                    lvaCdRamo, '%', 'USA_API_CONCXP',
+                    SYSDATE, '*','*','*','*','*'),'N');
+
+  v_cnuevo := v_cnuevo_raw;
+
+  v_cfallback := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','FALLBACK_CONCXP',SYSDATE,'*','*','*','*','*'),'S');
+
+  IF v_cnuevo <> 'S' AND v_cfallback <> 'S' THEN
+    ovaEstado := 'Error';
+    ovaMensajeTecnico := f255('Sin rutas habilitadas (API y fallback desactivados)');
+    ovaMensajeUsuario := f255('No hay canal disponible para la consulta.');
+    RETURN;
+  END IF;
+
 
   ---------------------------------------------------------------------------
   -- Camino Apigee con validaciones de legado
   ---------------------------------------------------------------------------
+  
   IF v_cnuevo = 'S' THEN
+    -- Obtener listado de ramos de salud (global web)
+    lvaRamosSinCxpSalud := PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','RAMOS_SIN_SAL',SYSDATE,'*','*','*','*','*'); 
+
+    -- Validar si es salud (global web) o vida (atr) para definir sistema origen
+    IF INSTR(UPPER(lvaRamosSinCxpSalud),UPPER(lvaCdRamo)) > 0 THEN
+      lvaSistemaOrigen := 'GLOBALWEB';
+    ELSE
+      lvaSistemaOrigen := 'ATR';
+    END IF;
+
     BEGIN
       lvaMensajeTecnico := 'Llamando a Apigee';
 
@@ -322,15 +417,16 @@ BEGIN
         v_a_importe         NUMBER;
         v_a_usuario         VARCHAR2(100);
         v_a_fecha_pos_pago  DATE;
-        v_a_msj_tec         VARCHAR2(255);
-        v_a_msj_usr         VARCHAR2(255);
+        v_a_msj_tec         VARCHAR2(4000);
+        v_a_msj_usr         VARCHAR2(4000);
+        v_sin_data          BOOLEAN;
       BEGIN
         PCK_CXP_CONSULTA_EST_ATR.PR_CONSULTAR_ESTADO(
           i_cdCompania           => lobjMensaje.cdCompania,
           i_dsNitAcreedor        => lobjMensaje.dsNitAcreedor,
           i_cdTipoIdentificacion => lobjMensaje.cdTipoIdentificacion,
           i_dsReferencia         => lobjMensaje.dsReferencia,
-          i_sistema_origen       => 'ATR',
+          i_sistema_origen       => lvaSistemaOrigen,
           i_estado               => 'X',   -- requerido por SAP
           o_estado               => v_a_estado,
           o_fecha_compensacion   => v_a_fecha_comp,
@@ -350,42 +446,54 @@ BEGIN
         ovaUsuario        := v_a_usuario;
         odaFePosiblePago  := v_a_fecha_pos_pago;
 
-        -- Si estado viene NULL => mensajes "Error: <clave2> <detalle>" (sin forzar fallback)
-        IF v_a_estado IS NULL THEN
-          ovaMensajeTecnico := f255('Error: ' || ivaClave2 || ' ' || NVL(v_a_msj_tec, v_a_msj_usr));
-          ovaMensajeUsuario := f255('Error: ' || ivaClave2 || ' ' || NVL(v_a_msj_usr, v_a_msj_tec));
+        v_sin_data :=
+             (v_a_msj_tec IS NOT NULL AND INSTR(UPPER(v_a_msj_tec), 'NO SE ENCONTRARON POSICIONES') > 0)
+          OR (v_a_msj_usr IS NOT NULL AND INSTR(UPPER(v_a_msj_usr), 'NO SE ENCONTRARON POSICIONES') > 0)
+          OR (UPPER(TRIM(NVL(v_a_estado,'X'))) = 'N' AND v_a_msj_tec IS NULL AND v_a_msj_usr IS NULL);
+
+        IF v_sin_data THEN
+          ovaEstado := 'N';
+          ovaMensajeTecnico := f255(v_a_msj_tec);
+          ovaMensajeUsuario := f255(v_a_msj_usr);
+          lbEjecutarLegado := FALSE;
         ELSE
-          -- Respeto mensajes de Apigee si vienen
-          ovaMensajeTecnico := f255(NVL(v_a_msj_tec, ovaMensajeTecnico));
-          ovaMensajeUsuario := f255(NVL(v_a_msj_usr, ovaMensajeUsuario));
-        END IF;
-
-        -- 'ERROR' como estado => error controlado (se preservan salidas, sin fallback)
-        IF UPPER(TRIM(NVL(v_a_estado,'x'))) = 'ERROR' THEN
-          IF ovaMensajeTecnico IS NULL AND ovaMensajeUsuario IS NULL THEN
-            ovaMensajeTecnico := f255('Error: ' || ivaClave2 || ' Respuesta de negocio con ERROR');
-            ovaMensajeUsuario := ovaMensajeTecnico;
-          END IF;
-        END IF;
-
-        -- === Decisión de fallback técnico/estructural por prefijos del paquete ===
-        IF v_a_msj_tec IS NOT NULL THEN
-          IF    UPPER(v_a_msj_tec) LIKE 'HEADER:%'
-             OR UPPER(v_a_msj_tec) LIKE 'SYNC:%'
-             OR UPPER(v_a_msj_tec) LIKE 'UNEXPECTED:%'
-             OR UPPER(v_a_msj_tec) LIKE 'RESPONSE:%' THEN
-            lbEjecutarLegado := TRUE;   -- fallo técnico/estructural => fallback
+          -- Si estado viene NULL => mensajes "Error: <clave2> <detalle>" (sin forzar fallback)
+          IF v_a_estado IS NULL THEN
+            ovaMensajeTecnico := f255('Error: ' || ivaClave2 || ' ' || NVL(v_a_msj_tec, v_a_msj_usr));
+            ovaMensajeUsuario := f255('Error: ' || ivaClave2 || ' ' || NVL(v_a_msj_usr, v_a_msj_tec));
           ELSE
-            lbEjecutarLegado := FALSE;  -- mensaje de negocio => nos quedamos
+            -- Respeto mensajes de Apigee si vienen
+            ovaMensajeTecnico := f255(NVL(v_a_msj_tec, ovaMensajeTecnico));
+            ovaMensajeUsuario := f255(NVL(v_a_msj_usr, ovaMensajeUsuario));
           END IF;
-        ELSE
-          lbEjecutarLegado := FALSE;    -- OK técnico
+
+          -- 'ERROR' como estado => error controlado (se preservan salidas, sin fallback)
+          IF UPPER(TRIM(NVL(v_a_estado,'x'))) = 'ERROR' THEN
+            IF ovaMensajeTecnico IS NULL AND ovaMensajeUsuario IS NULL THEN
+              ovaMensajeTecnico := f255('Error: ' || ivaClave2 || ' Respuesta de negocio con ERROR');
+              ovaMensajeUsuario := ovaMensajeTecnico;
+            END IF;
+          END IF;
+
+          -- === Decision de fallback tecnico/estructural por prefijos del paquete ===
+          IF v_a_msj_tec IS NOT NULL THEN
+            IF    UPPER(v_a_msj_tec) LIKE 'HEADER:%'
+               OR UPPER(v_a_msj_tec) LIKE 'SYNC:%'
+               OR UPPER(v_a_msj_tec) LIKE 'UNEXPECTED:%'
+               OR UPPER(v_a_msj_tec) LIKE 'RESPONSE:%' THEN
+              lbEjecutarLegado := TRUE;   -- fallo tecnico/estructural => fallback
+            ELSE
+              lbEjecutarLegado := FALSE;  -- mensaje de negocio => nos quedamos
+            END IF;
+          ELSE
+            lbEjecutarLegado := FALSE;    -- OK tecnico
+          END IF;
         END IF;
       END;
 
     EXCEPTION
       WHEN OTHERS THEN
-        -- Excepción técnica (timeout, HTTP no 2xx, etc.) => fallback legado
+        -- Excepcion tecnica (timeout, HTTP no 2xx, etc.) => fallback legado
         ovaMensajeTecnico := f255('Apigee: ' || SQLERRM);
         ovaMensajeUsuario := f255('Apigee: ' || SQLERRM);
         lbEjecutarLegado  := TRUE;
@@ -395,7 +503,7 @@ BEGIN
   ---------------------------------------------------------------------------
   -- Camino SuraBroker (legado) - solo si se requiere fallback
   ---------------------------------------------------------------------------
-  IF lbEjecutarLegado THEN
+  IF lbEjecutarLegado AND v_cfallback = 'S' THEN
       lvaMensajeTecnico := 'Llamando a SuraBroker';
       lobjResultados := PCK_SBK_SURABROKER.FN_EJECUTAR_SERVICIO_SINCRONO(lobjMensaje);
       lvaMensajeTecnico := 'Obteniendo los resultados';
@@ -407,8 +515,8 @@ BEGIN
         ovaUsuario  := lobjTransaccion.dsUsuario;
         odaFePosiblePago := lobjTransaccion.fePosiblePago;
         IF ovaEstado IS NULL THEN
-            ovaMensajeTecnico := substr('Error: '||ivaClave2||' '||lobjTransaccion.dsError,1,255);
-            ovaMensajeUsuario := substr('Error: '||ivaClave2||' '||lobjTransaccion.dsError,1,255);
+            ovaMensajeTecnico := SUBSTR('Error: '||ivaClave2||' '||lobjTransaccion.dsError,1,4000);
+            ovaMensajeUsuario := SUBSTR('Error: '||ivaClave2||' '||lobjTransaccion.dsError,1,4000);
         END IF;
       ELSE
         ovaEstado   := lobjTransaccion.dsEstado;
@@ -418,32 +526,25 @@ BEGIN
         odaFePosiblePago := lobjTransaccion.fePosiblePago;
       END IF;
   END IF;
-  EXCEPTION
-      WHEN lexErrorProcedimientoExt THEN
-				ovaMensajeTecnico := SUBSTR(TRIM(lpad(to_char(abs(SQLCODE)),7,'0' )||':'|| ' - '||lvaMensajeTecnicoExt),1,255);
-				ovaMensajeUsuario := SUBSTR(TRIM(lvaMensajeUsuarioExt),1,255);
-      WHEN lexErrorProcedimiento THEN
-        ovaMensajeTecnico:= gvaPackage ||'.'||lvaNombreObjeto ||':' || lpad(to_char(abs(SQLCODE)),7,'0' )||':'||lvaMensajeTecnico;
-        ovaMensajeUsuario:= gvaPackage ||'.'||lvaNombreObjeto ||':' || lpad(to_char(abs(SQLCODE)),7,'0' )||':'||lvaMensajeUsuario;
-      WHEN OTHERS THEN
-			 --Llamado a Cronos
-			 lvaerror := SQLERRM;
-			 WHILE(length(lvaerror)>255) LOOP
-       			 dbms_output.put_line(substr(lvaerror,1,255));
-						 lvaerror := substr(lvaerror,255,length(lvaerror));
-			 END LOOP;
-			 dbms_output.put_line(lvaerror);
-       ovaMensajeTecnico:= substr(gvaPackage ||'.'||lvaNombreObjeto ||':' || lpad(to_char(abs(SQLCODE)),7,'0' )||':'||lvaMensajeTecnico,1,255);
-       ovaMensajeUsuario:= substr(SQLERRM,1,255);--'TRANSACCION NO DISPONIBLE ' ;
+EXCEPTION
+  WHEN lexErrorProcedimientoExt THEN
+    ovaMensajeTecnico := SUBSTR(TRIM(LPAD(TO_CHAR(ABS(SQLCODE)),7,'0')||':'|| ' - '||lvaMensajeTecnicoExt),1,4000);
+    ovaMensajeUsuario := SUBSTR(TRIM(lvaMensajeUsuarioExt),1,4000);
+  WHEN lexErrorProcedimiento THEN
+    ovaMensajeTecnico:= gvaPackage ||'.'||lvaNombreObjeto ||':' || LPAD(TO_CHAR(ABS(SQLCODE)),7,'0' )||':'||lvaMensajeTecnico;
+    ovaMensajeUsuario:= gvaPackage ||'.'||lvaNombreObjeto ||':' || LPAD(TO_CHAR(ABS(SQLCODE)),7,'0' )||':'||lvaMensajeUsuario;
+  WHEN OTHERS THEN
+    ovaMensajeTecnico := gvaPackage || '.' || lvaNombreObjeto || ':' || CHR(13) ||
+                         'Fecha/Hora: ' || TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') || CHR(13) ||
+                         'Expediente: ' || ivaClave1 || '-' || ivaClave2 || CHR(13) ||
+                         'SQLCODE: ' || TO_CHAR(SQLCODE) || CHR(13) ||
+                         'SQLERRM: ' || SQLERRM || CHR(13) ||
+                         'Error Stack: ' || DBMS_UTILITY.FORMAT_ERROR_STACK || CHR(13) ||
+                         'Call Stack: ' || DBMS_UTILITY.FORMAT_CALL_STACK || CHR(13) ||
+                         'Backtrace: ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE;
 
-			 PCKCRO_INTERFAZ_CRONOS.SPCRO_ERROR('SINIESTROS',
-																					'GestorSiniestros',
-																					lpad(to_char(abs(SQLCODE)),7,'0' ),
-																					'SINIESTROS',
-																					SUBSTR(ivaClave1||'-'||ivaClave2||'-'||lvaMensajeUsuario,1,255),
-																					lvaMensajeTecnico);
-
-	END SP_CONSULTAR_EST_CXP;
+    ovaMensajeUsuario := 'Ocurrio un error inesperado. Por favor contacte al administrador';
+END SP_CONSULTAR_EST_CXP;
 ------------------------------------------------------------------------------------------------------------------------
 
 	PROCEDURE SP_DESAUTORIZAR_CXP( ivaNmExpediente        IN VARCHAR2,
@@ -492,8 +593,8 @@ BEGIN
      /*
      - Modificado por: Sergio Garcia 2016/03/28
      - Asunto: Llamar al nuevo adaptador que se encarga de enviar la 
-     -         información de PDN a SINFO
-     - Proyecto: [Rediseño Cierre de Seguros]
+     -         informaci?n de PDN a SINFO
+     - Proyecto: [Redise?o Cierre de Seguros]
      */
 
      BEGIN
@@ -506,7 +607,7 @@ BEGIN
            ovaMensajeTecnico:=lvaMensajeTecnicoExt;
            ovaMensajeUsuario:=lvaMensajeUsuarioExt;
      END;
-     --Fin modificación Sergio Garcia.     
+     --Fin modificaci?n Sergio Garcia.     
 
 
 
@@ -575,8 +676,8 @@ BEGIN
      /*
      - Modificado por: Sergio Garcia 2016/03/28
      - Asunto: Llamar al nuevo adaptador que se encarga de enviar la 
-     -         información de PDN a SINFO
-     - Proyecto: [Rediseño Cierre de Seguros]
+     -         informaci?n de PDN a SINFO
+     - Proyecto: [Redise?o Cierre de Seguros]
      */
 
      BEGIN
@@ -589,7 +690,7 @@ BEGIN
            ovaMensajeTecnico:=lvaMensajeTecnicoExt;
            ovaMensajeUsuario:=lvaMensajeUsuarioExt;
      END;
-     --Fin modificación Sergio Garcia.
+     --Fin modificaci?n Sergio Garcia.
 
   EXCEPTION
       WHEN lexErrorProcedimientoExt THEN
@@ -656,8 +757,8 @@ BEGIN
      /*
      - Modificado por: Sergio Garcia 2016/03/28
      - Asunto: Llamar al nuevo adaptador que se encarga de enviar la 
-     -         información de PDN a SINFO
-     - Proyecto: [Rediseño Cierre de Seguros]
+     -         informaci?n de PDN a SINFO
+     - Proyecto: [Redise?o Cierre de Seguros]
      */
 
      BEGIN
@@ -670,7 +771,7 @@ BEGIN
            ovaMensajeTecnico:=lvaMensajeTecnicoExt;
            ovaMensajeUsuario:=lvaMensajeUsuarioExt;
      END;
-     --Fin modificación Sergio Garcia. 
+     --Fin modificaci?n Sergio Garcia. 
 
   EXCEPTION
       WHEN lexErrorProcedimientoExt THEN
