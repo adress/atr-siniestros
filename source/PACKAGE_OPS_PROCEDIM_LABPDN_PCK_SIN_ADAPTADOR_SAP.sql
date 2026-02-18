@@ -329,6 +329,7 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_ADAPTADOR_SAP
   lvaDniCoaseguro                  PERSONAS.DNI%TYPE;
   lvaCodigoAceptacion              PAGOS.CODIGO_ACEPTACION%TYPE;
   lvaSnPagoCajaSura                VARCHAR2(1)     := 'N';
+  lvaUsaApiGee                     VARCHAR2(1)     := 'N';
 --  lnuTotalDeducible                SIN_PAGOS_DET.DEDUCIBLE%TYPE;
 --  lnuTotalPtDescuento              SIN_PAGOS_DET.PTDESCUENTO%TYPE;
 
@@ -345,7 +346,7 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_ADAPTADOR_SAP
   --linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
   lvaAplicaSinRetencion VARCHAR2(1) := 'N';
   
-  -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+  -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
   lvaAplicaReservaSinRetencion VARCHAR2(1) := 'N';
 
   --Cursores para consultar la informacion
@@ -557,9 +558,12 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_ADAPTADOR_SAP
    AND   ldaFeOcurrencia    BETWEEN FEALTA
                                 AND NVL(FEBAJA,SYSDATE)*/;
 
- CURSOR lcuDatosCaja IS
+ CURSOR lcuDatosCaja(pUsaApiGee VARCHAR2) IS
   SELECT NVL(FEPOSIBLE_PAGO,P.FECHA_PAGO), CDVIAPAGO, CDBLOQUEOPAGO, CDPAISBANCO, CDBANCO, NMCUENTA,
-         PCK_SIC_SAP.FN_SIC_MAPEO_TIPO_CUENTA(CDTIPOCUENTA) CDTIPOCUENTA,
+         CASE 
+           WHEN pUsaApiGee = 'S' THEN CDTIPOCUENTA
+           ELSE PCK_SIC_SAP.FN_SIC_MAPEO_TIPO_CUENTA(CDTIPOCUENTA)
+         END CDTIPOCUENTA,
          CDSUCURSALBANCO, SUBSTR(DSTITULAR,1,60) DSTITULAR, p.CODIGO_ACEPTACION
   FROM PAGOS p
   WHERE p.EXPEDIENTE        = ivaNmExpediente
@@ -870,7 +874,19 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_ADAPTADOR_SAP
 
    lvaSnCalcularImpuestos             := 'S';
 
-   OPEN lcuDatosCaja;
+   -- Query USA_API_SINICXP parameter to determine if Apigee API flow should be used
+   lvaUsaApiGee := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2(lvaCdRamo,
+                                                         '%',
+                                                         'USA_API_SINICXP',
+                                                         SYSDATE,
+                                                         '%',
+                                                         '%',
+                                                         '%',
+                                                         '%',
+                                                         '%'),
+                      'N');
+
+   OPEN lcuDatosCaja(lvaUsaApiGee);
    FETCH lcuDatosCaja INTO lvaFeposiblePago, lvaCdViaPago, lvaCdbloqueoPago,
                            lvaCdPaisBanco, lvaCdBanco, lvaNmCuenta, cdTipoCuenta,
                            lvaCdSucursalBanco, lvaDsTitular, lvaCodigoAceptacion;
@@ -959,7 +975,7 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_ADAPTADOR_SAP
   FOR doc IN lcuDatosDocumentoFyC LOOP
 
    lvaCodIva                          := LPAD(REPLACE(TO_CHAR(RPAD(DOC.POIRPF,4,'0')),'.',''),4,'0');
-   -- 8/10/2025. HT918841 - Códigos de retención específicos. luishure 
+   -- 8/10/2025. HT918841 - Cï¿½digos de retenciï¿½n especï¿½ficos. luishure 
    IF lvaCodIva = '1900' AND PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','GET_INDICADOR',SYSDATE, DOC.CDRETENCION ,'*','*','*','*') IS NOT NULL THEN
      lvaCodIva                        := PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','GET_INDICADOR',SYSDATE, DOC.CDRETENCION ,'*','*','*','*');
    END IF;
@@ -1212,7 +1228,7 @@ NULL;
     -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
     -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
     -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-    -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro   
+    -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro   
     IF (lvaCdRamo = '081' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
       IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN
             lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -1380,7 +1396,7 @@ NULL;
      -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
      -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
      -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-     -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+     -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
      IF (lvaCdRamo = '081' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
        IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN
           lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -1543,7 +1559,7 @@ NULL;
       -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
       -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
       -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-      -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+      -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
       IF (lvaCdRamo = '081' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
         IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN
           lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -1696,7 +1712,7 @@ NULL;
      -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
      -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
      -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-     -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+     -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
      IF (lvaCdRamo = '081' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
        IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN
           lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -1849,7 +1865,7 @@ NULL;
   FOR doc IN lcuDatosDocumentoRes LOOP
 
    lvaCodIva                          := LPAD(REPLACE(TO_CHAR(RPAD(DOC.POIRPF,4,'0')),'.',''),4,'0');
-   -- 8/10/2025. HT918841 - Códigos de retención específicos. luishure 
+   -- 8/10/2025. HT918841 - Cï¿½digos de retenciï¿½n especï¿½ficos. luishure 
    IF lvaCodIva = '1900' AND PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','GET_INDICADOR',SYSDATE, DOC.CDRETENCION ,'*','*','*','*') IS NOT NULL THEN
      lvaCodIva                        := PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','GET_INDICADOR',SYSDATE, DOC.CDRETENCION ,'*','*','*','*');
    END IF;
@@ -2130,7 +2146,7 @@ NULL;
     -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
     -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
     -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-    -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+    -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
     IF (lvaCdRamo = '081' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
       IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN  
         lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -2316,7 +2332,7 @@ NULL;
      -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
      -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
      -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-     -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+     -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
      IF (lvaCdRamo = '081' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
        IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN
         lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -2470,7 +2486,7 @@ NULL;
      -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
      -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
      -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-     -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+     -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
      IF (lvaCdRamo = '081' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
        IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN 
         lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -2628,7 +2644,7 @@ NULL;
       -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
       -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
       -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-      -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+      -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
       IF (lvaCdRamo = '081' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
         IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN   
           lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -6224,6 +6240,7 @@ NULL;
   lvaDniCoaseguro                  PERSONAS.DNI%TYPE;
   lvaCodigoAceptacion              PAGOS.CODIGO_ACEPTACION%TYPE;
   lvaSnPagoCajaSura                VARCHAR2(1)     := 'N';
+  lvaUsaApiGee                     VARCHAR2(1)     := 'N';
 --  lnuTotalDeducible                SIN_PAGOS_DET.DEDUCIBLE%TYPE;
 --  lnuTotalPtDescuento              SIN_PAGOS_DET.PTDESCUENTO%TYPE;
 
@@ -6240,7 +6257,7 @@ NULL;
   --linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
   lvaAplicaSinRetencion VARCHAR2(1) := 'N';
   
-  -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+  -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
   lvaAplicaReservaSinRetencion VARCHAR2(1) := 'N';
 
   --Cursores para consultar la informacion
@@ -6461,9 +6478,12 @@ NULL;
    AND   ldaFeOcurrencia    BETWEEN FEALTA
                                 AND NVL(FEBAJA,SYSDATE)*/;
 
- CURSOR lcuDatosCaja IS
+ CURSOR lcuDatosCaja(pUsaApiGee VARCHAR2) IS
   SELECT NVL(FEPOSIBLE_PAGO,P.FECHA_PAGO), CDVIAPAGO, CDBLOQUEOPAGO, CDPAISBANCO, CDBANCO, NMCUENTA,
-         PCK_SIC_SAP.FN_SIC_MAPEO_TIPO_CUENTA(CDTIPOCUENTA) CDTIPOCUENTA,
+         CASE 
+           WHEN pUsaApiGee = 'S' THEN CDTIPOCUENTA
+           ELSE PCK_SIC_SAP.FN_SIC_MAPEO_TIPO_CUENTA(CDTIPOCUENTA)
+         END CDTIPOCUENTA,
          CDSUCURSALBANCO, SUBSTR(DSTITULAR,1,60) DSTITULAR, p.CODIGO_ACEPTACION
   FROM PAGOS p
   WHERE p.EXPEDIENTE        = ivaNmExpediente
@@ -6755,7 +6775,19 @@ NULL;
 
    lvaSnCalcularImpuestos             := 'S';
 
-   OPEN lcuDatosCaja;
+   -- Query USA_API_SINICXP parameter to determine if Apigee API flow should be used
+   lvaUsaApiGee := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2(lvaCdRamo,
+                                                         '%',
+                                                         'USA_API_SINICXP',
+                                                         SYSDATE,
+                                                         '%',
+                                                         '%',
+                                                         '%',
+                                                         '%',
+                                                         '%'),
+                      'N');
+
+   OPEN lcuDatosCaja(lvaUsaApiGee);
    FETCH lcuDatosCaja INTO lvaFeposiblePago, lvaCdViaPago, lvaCdbloqueoPago,
                            lvaCdPaisBanco, lvaCdBanco, lvaNmCuenta, cdTipoCuenta,
                            lvaCdSucursalBanco, lvaDsTitular, lvaCodigoAceptacion;
@@ -6841,7 +6873,7 @@ NULL;
    INSERT INTO T999_INCONSISTENCIAS (cdramo, cdsubramo, nmnegocio, feingreso, dsparametros, dsmensaje_tecnico, cdaplicacion)
         VALUES ('', '', '', SYSDATE, 'FOR lcuDatosDocumentoFyC ', '', 'TRAZA_RETENCION_083');
    lvaCodIva                          := LPAD(REPLACE(TO_CHAR(RPAD(DOC.POIRPF,4,'0')),'.',''),4,'0');
-   -- 8/10/2025. HT918841 - Códigos de retención específicos. luishure 
+   -- 8/10/2025. HT918841 - Cï¿½digos de retenciï¿½n especï¿½ficos. luishure 
    IF lvaCodIva = '1900' AND PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','GET_INDICADOR',SYSDATE, DOC.CDRETENCION ,'*','*','*','*') IS NOT NULL THEN
      lvaCodIva                        := PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','GET_INDICADOR',SYSDATE, DOC.CDRETENCION ,'*','*','*','*');
    END IF;
@@ -7084,7 +7116,7 @@ NULL;
                                                                              '%',
                                                                              '%'), 'N');
     -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
-    -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+    -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
     IF lvaCdRamo = '083' AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
       IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN 
         lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -7244,7 +7276,7 @@ NULL;
      -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
      -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
      -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-     -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+     -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
      IF (lvaCdRamo = '083' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN     
        IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN 
         lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -7400,7 +7432,7 @@ NULL;
      -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
      -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
      -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-     -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+     -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
       IF (lvaCdRamo = '083' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN           
         IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN 
           lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -7551,7 +7583,7 @@ NULL;
      -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
      -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
      -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-     -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+     -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
       IF (lvaCdRamo = '083' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
         IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN 
           lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -7695,7 +7727,7 @@ NULL;
         VALUES ('', '', '', SYSDATE, 'FOR lcuDatosDocumentoRes ', '', 'TRAZA_RETENCION_083');
 
    lvaCodIva                          := LPAD(REPLACE(TO_CHAR(RPAD(DOC.POIRPF,4,'0')),'.',''),4,'0');
-   -- 8/10/2025. HT918841 - Códigos de retención específicos. luishure 
+   -- 8/10/2025. HT918841 - Cï¿½digos de retenciï¿½n especï¿½ficos. luishure 
    IF lvaCodIva = '1900' AND PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','GET_INDICADOR',SYSDATE, DOC.CDRETENCION ,'*','*','*','*') IS NOT NULL THEN
      lvaCodIva                        := PCK_PARAMETROS.FN_GET_PARAMETROV2('%','%','GET_INDICADOR',SYSDATE, DOC.CDRETENCION ,'*','*','*','*');
    END IF;
@@ -7959,7 +7991,7 @@ NULL;
     -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
     -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
     -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-    -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+    -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
      IF (lvaCdRamo = '083' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
        IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN 
           lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -8136,7 +8168,7 @@ NULL;
      -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
      -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
      -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-     -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+     -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
      IF (lvaCdRamo = '083' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
        IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN 
           lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -8281,7 +8313,7 @@ NULL;
      -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
      -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
      -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-     -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+     -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
      IF (lvaCdRamo = '083' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
        IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN 
           lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
@@ -8431,7 +8463,7 @@ NULL;
      -- 01/12/2024 josebuvi VERIFICACION DE VIDA PARA INDICADOR IMPUESTO
      -- linaduto - 2025/03/11 - HU756348 -Ajuste retenci?n en la fuente para ID NIT - subramos PCP y deudores
      -- linaduto - 2025/03/20 - HU764049 -Ajuste retenci?n en la fuente para ID NIT - Ramo BAN
-     -- luishure - 2025/12/10 - HU984785 - Exclusión de retención para Fondo de Ahorro
+     -- luishure - 2025/12/10 - HU984785 - Exclusiï¿½n de retenciï¿½n para Fondo de Ahorro
      IF (lvaCdRamo = '083' OR lvaCdRamo = 'BAN') AND lvaCdGarantia = 'VID' AND lvaAplicaReservaSinRetencion = 'N' THEN
        IF (lvaAplicaSinRetencion = 'N' OR (lvaAplicaSinRetencion = 'S' AND substr(lvaDni,1,1) <> 'A')) THEN 
           lnuContadorRetencionVida             := lnuContadorRetencionVida + 1;
