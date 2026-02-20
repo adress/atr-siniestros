@@ -324,6 +324,9 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_ADAPTADOR_SAP
   
   -- Variable para almacenar si es devolución
   lvIsDevolucion VARCHAR2(1);
+
+  -- Variable para almacenar si se usa el flujo API Apigee (feature toggle USA_API_SINICXP)
+  lvaUsaApiSiniCxp VARCHAR2(1) := 'N';
   
   --Cursores para consultar la informacion
   
@@ -551,9 +554,12 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_ADAPTADOR_SAP
    AND   ldaFeOcurrencia    BETWEEN FEALTA
                                 AND NVL(FEBAJA,SYSDATE)*/;
 
- CURSOR lcuDatosCaja(pIsDevolucion VARCHAR2) IS
+ CURSOR lcuDatosCaja(pIsDevolucion VARCHAR2, pUsaApiGee VARCHAR2) IS
   SELECT NVL(FEPOSIBLE_PAGO,P.FECHA_PAGO), CDVIAPAGO, CDBLOQUEOPAGO, CDPAISBANCO, CDBANCO, NMCUENTA,
-		CASE WHEN pIsDevolucion = 'S' THEN CDTIPOCUENTA ELSE PCK_SIC_SAP.FN_SIC_MAPEO_TIPO_CUENTA(CDTIPOCUENTA) END AS CDTIPOCUENTA,
+		CASE WHEN pIsDevolucion = 'S' THEN CDTIPOCUENTA
+		     WHEN pUsaApiGee = 'S' THEN CDTIPOCUENTA
+		     ELSE PCK_SIC_SAP.FN_SIC_MAPEO_TIPO_CUENTA(CDTIPOCUENTA)
+		END AS CDTIPOCUENTA,
         CDSUCURSALBANCO, SUBSTR(DSTITULAR,1,60) DSTITULAR, p.CODIGO_ACEPTACION
   FROM PAGOS p
   WHERE p.EXPEDIENTE        = ivaNmExpediente
@@ -861,7 +867,9 @@ CREATE OR REPLACE EDITIONABLE PACKAGE BODY "OPS$PROCEDIM"."PCK_SIN_ADAPTADOR_SAP
    END IF;
    CLOSE lcuIsDevolucion;
 
-   OPEN lcuDatosCaja(lvIsDevolucion);
+   lvaUsaApiSiniCxp := NVL(PCK_PARAMETROS.FN_GET_PARAMETROV2(lvaCdRamo, '%', 'USA_API_SINICXP', SYSDATE, '%', '%', '%', '%', '%'), 'N');
+
+   OPEN lcuDatosCaja(lvIsDevolucion, lvaUsaApiSiniCxp);
    FETCH lcuDatosCaja INTO lvaFeposiblePago, lvaCdViaPago, lvaCdbloqueoPago,
                            lvaCdPaisBanco, lvaCdBanco, lvaNmCuenta, cdTipoCuenta,
                            lvaCdSucursalBanco, lvaDsTitular, lvaCodigoAceptacion;
